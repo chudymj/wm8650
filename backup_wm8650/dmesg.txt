@@ -1,0 +1,1076 @@
+Linux version 2.6.32.9-default (reilienchen@szmce13) (gcc version 4.5.1 (Sourcery G++ Lite 2010.09-50) ) #3 Thu Dec 29 20:07:17 HKT 2011
+CPU: ARM926EJ-S [41069265] revision 5 (ARMv5TEJ), cr=00053177
+CPU: VIVT data cache, VIVT instruction cache
+Machine: WMT
+Memory policy: ECC disabled, Data cache writeback
+On node 0 totalpages: 54272
+free_area_init_node: node 0, pgdat c05cc9ac, node_mem_map c06ad000
+  Normal zone: 424 pages used for memmap
+  Normal zone: 0 pages reserved
+  Normal zone: 53848 pages, LIFO batch:15
+Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 53848
+Kernel command line: mem=212M root=/dev/mtdblock11 noinitrd rootfstype=yaffs2 rw console=ttyS0,115200n8 lpj=AUTO init=/init wmtvo=2:1:24:800:480:60 quiet
+[VPP] vpp boot arg LCD opt 1,24, 800x480@60
+PID hash table entries: 1024 (order: 0, 4096 bytes)
+Dentry cache hash table entries: 32768 (order: 5, 131072 bytes)
+Inode-cache hash table entries: 16384 (order: 4, 65536 bytes)
+Memory: 212MB = 212MB total
+Memory: 208128KB available (5508K code, 1137K data, 148K init, 0K highmem)
+Hierarchical RCU implementation.
+NR_IRQS:128
+Console: colour dummy device 80x30
+console [ttyS0] enabled
+Calibrating delay loop... 348.97 BogoMIPS (lpj=1744896)
+Mount-cache hash table entries: 512
+CPU: Testing write buffer coherency: ok
+NET: Registered protocol family 16
+wmt_pci_init
+PCI: WonderMidia Technology PCI Bridge
+pci 0000:00:01.0: reg 10 io port: [0xd8008100-0xd8008107]
+pci 0000:00:01.0: reg 14 io port: [0xd8008144-0xd8008147]
+pci 0000:00:01.0: reg 20 io port: [0xd8008180-0xd800818f]
+pci 0000:00:02.0: reg 10 io port: [0xd8004000-0xd80040ff]
+pci 0000:00:02.0: reg 14 32bit mmio: [0xd8004000-0xd80040ff]
+pci 0000:00:04.0: reg 10 32bit mmio: [0xd8007900-0xd80079ff]
+pci 0000:00:05.0: reg 20 io port: [0xd8007b00-0xd8007b1f]
+pci 0000:00:06.0: reg 20 io port: [0xd8008d00-0xd8008d1f]
+PCI: bus0: Fast back to back transfers disabled
+[WMT-MB] Preparing VIDEO BUFFER (SIZE 32768 kB) ...
+[WMT-MB] MAX MB Area size: Max 4096 Kbs Min 256 Kbs
+[WMT-MB] prob /dev/Memory Block major 242, minor 0
+bio: create slab <bio-0> at 0
+vgaarb: loaded
+SCSI subsystem initialized
+usbcore: registered new interface driver usbfs
+usbcore: registered new interface driver hub
+usbcore: registered new device driver usb
+NET: Registered protocol family 2
+IP route cache hash table entries: 2048 (order: 1, 8192 bytes)
+TCP established hash table entries: 8192 (order: 4, 65536 bytes)
+TCP bind hash table entries: 8192 (order: 3, 32768 bytes)
+TCP: Hash tables configured (established 8192 bind 8192)
+TCP reno registered
+NET: Registered protocol family 1
+RPC: Registered udp transport module.
+RPC: Registered tcp transport module.
+RPC: Registered tcp NFSv4.1 backchannel transport module.
+ashmem: initialized
+NTFS driver 2.1.29 [Flags: R/W].
+JFFS2 version 2.2. (NAND) © 2001-2006 Red Hat, Inc.
+yaffs Dec 15 2011 14:32:40 Installing. 
+msgmni has been set to 406
+alg: No test for stdrng (krng)
+io scheduler noop registered
+io scheduler anticipatory registered
+io scheduler deadline registered
+io scheduler cfq registered (default)
+un-know id = 0xc84013
+un-know id = 0xffffff
+wmt sf controller initial ok
+Creating 6 MTD partitions on "mtdsf device":
+0x000000000000-0x000000d00000 : "filesystem-SF"
+0x000000d00000-0x000000f80000 : "kernel-SF"
+0x000000f80000-0x000000fd0000 : "u-boot-SF"
+0x000000fd0000-0x000000fe0000 : "u-boot env. cfg. 1-SF"
+0x000000fe0000-0x000000ff0000 : "u-boot env. cfg. 2-SF"
+0x000000ff0000-0x000001000000 : "w-load-SF"
+1PMNAND_ADDR=0x8 
+kmalloc buffer env_ptr = 0xccd70000, env_ptr_nand = 0xccd70000
+MTD dev0   size: 0x00d00000   : "filesystem-SF"
+MTD dev1   size: 0x00280000   : "kernel-SF"
+MTD dev2   size: 0x00050000   : "u-boot-SF"
+MTD dev3   size: 0x00010000   : "u-boot env. cfg. 1-SF"
+MTD dev4   size: 0x00010000   : "u-boot env. cfg. 2-SF"
+MTD dev5   size: 0x00010000   : "w-load-SF"
+MTD Dev3 isn't valid
+## Warning: "wmt.io.nand" not defined
+## Warning: "wmt.dual.os" not defined
+## Warning: "wmt.nousb.device" not defined
+NAND device: Manufacturer ID: 0xec, Chip ID: 0xd58472 (Samsung K9GAG08U0E)
+PLLB=0x10, spec_clk=0x190a0fff
+T1=2, clk1=17, div1=7, Thold=1, tREA=25+delay(9)
+T2=1, clk2=35, div2=14, Thold2=1, comp=1
+Tim1=417792 , Tim2=573440
+T2 is greater and not use
+T=2, clk=17, divisor=7, Thold=0x701
+divisor PMNAND_ADDR is set 0x7, NFC_timing=0x2424
+BCH ECC 24BIT
+## Warning: "wmt.io.nand" not defined
+NAND device: Manufacturer ID: 0xec, Chip ID: 0xd58472 (Samsung K9GAG08U0E)
+nand flash is not ready or no more nand chips
+Reset err, nand device is not ready or No more nand chips.
+find bbt page is 262016
+Bad block table found at page 262016, version 0x01
+find bbt page is 261888
+Bad block table found at page 261888, version 0x01
+nand_read_bbt: Bad block at 0x000025a00000
+Bad block at 602
+nand_read_bbt: Bad block at 0x000054e00000
+Bad block at 1358
+WMT_nand: uboot no dynamic partitions defined, use default static
+Creating 11 MTD partitions on "WMT.nand":
+0x000000000000-0x000000100000 : "w-load-NAND"
+0x000000100000-0x000000a00000 : "u-boot env. cfg. 1-NAND"
+0x000000a00000-0x000001300000 : "u-boot-NAND"
+0x000001300000-0x000001b00000 : "kernel-NAND"
+0x000001b00000-0x000002100000 : "initrd-NAND"
+0x000002100000-0x000022100000 : "filesystem-NAND"
+0x000022100000-0x000022900000 : "u-boot-logo"
+0x000022900000-0x000022d00000 : "kernel-logo"
+0x000022d00000-0x000042d00000 : "android-data"
+0x000042d00000-0x00004ad00000 : "android-cache"
+0x00004ad00000-0x000080000000 : "LocalDisk"
+MTD dev0 size: 0x00100000     : "w-load-NAND"
+MTD dev1 size: 0x00900000     : "u-boot env. cfg. 1-NAND"
+MTD dev2 size: 0x00900000     : "u-boot-NAND"
+MTD dev3 size: 0x00800000     : "kernel-NAND"
+MTD dev4 size: 0x00600000     : "initrd-NAND"
+MTD dev5 size: 0x20000000     : "filesystem-NAND"
+MTD dev6 size: 0x00800000     : "u-boot-logo"
+MTD dev0 size: 0x00100000     : "w-load-NAND"
+MTD dev1 size: 0x00900000     : "u-boot env. cfg. 1-NAND"
+MTD dev2 size: 0x00900000     : "u-boot-NAND"
+MTD dev3 size: 0x00800000     : "kernel-NAND"
+MTD dev4 size: 0x00600000     : "initrd-NAND"
+MTD dev5 size: 0x20000000     : "filesystem-NAND"
+MTD dev6 size: 0x00800000     : "u-boot-logo"
+MTD dev7 size: 0x00400000     : "kernel-logo"
+nand initialised ok
+i2c /dev entries driver
+I2C PORT0: Transfer Mode = 1; Speed Mode = 1
+i2c: adding wmt_i2c_adapter0.
+i2c: successfully added bus
+
+I2C PORT1: Transfer Mode = 1; Speed Mode = 1; I2C1 PLL = 20M
+i2c: adding wmt_i2c_adapter1.
+i2c: successfully added bus
+[wmt_i2c_api_i2c_init]
+[wmt_i2c_api_init] wmt_i2c_api_init.
+i2c: wmt algorithm module loaded.
+## Warning: "wmt.display.direct_path" not defined
+vpp_init(boot logo 1)
+[VPP] GOVW TG 0,vpu en 0,vpu path 0
+div_addr_offs=0x35c PLL_NO=1 
+[VPP] GOVW TG 0,vpu en 0,vpu path 0
+[VPP] GOVW TG 1,vpu en 0,vpu path 0
+[VPP] GOVW TG 1,vpu en 0,vpu path 0
+[VO] vout_init: <1>vo_init_wm8435
+--> lcd_init
+vt1632 hw mode
+[VOUT] ext dev : DVI
+[VOUT] int dev : NO
+## Warning: "wmt.display.user_res" not defined
+## Warning: "wmt.display.regop" not defined
+[VOUT] param 2:0:16:0:0:0
+[VOUT] boot parm vo LCD opt 0,16, 0x0@0
+## Warning: "wmt.display.param2" not defined
+## Warning: "wmt.pwm.invert" not defined
+----------------------[VOUT] pwm 0:25:50:99 -------------------
+[VOUT] blt 0,scalar 25,period 50,duty 99
+[VOUT] tmr 40000:0:10:46:800:20:10:23:480:10
+[VOUT] tmr pixclk 40000000,option 0x0,hsync 10,hbp 46,hpixel 800,hfp 20,vsync 10,vbp 23,vpixel 480,vfp 10
+[VOUT] boot argument vo1 2,vo2 9
+[VO] vo_boot_init: <7>vo_boot_init(0)
+vo_init_wm8440 (BOOT 800x480,0)
+gefb: framebuffer at 0f800000, mapped to d0000000, using 8192k, total 8192k
+Console: switching to colour frame buffer device 100x30
+fb0: wmtfb frame buffer device
+loadtime = -3
+start_boot_splash: screen xres = 800, yres = 480, info->var.bits_per_pixel =16
+wmt.kernel.animation.addr = f600000, 0xf600000 map to 0xcda00000
+It's not a valid Animation file at 0xcda00000, first 4 bytes: 0x2e746573
+--> start progress bar
+[VO] vo_boot_config: <7>vo_boot_config
+[VO] vo_boot_config: <7>Exit vo_boot_config
+div_addr_offs=0x35c PLL_NO=1 
+[VPP] GOVW TG 0,vpu en 0,vpu path 0
+[VPP] GOVW TG 1,vpu en 0,vpu path 0
+[VPP] GOVW TG 1,vpu en 0,vpu path 0
+fb1: WMT VPU frame buffer device
+Enter pwm_init
+mknod /dev/wmtgpio c 253 0
+WMT vibrater driver load successfully!
+uart.0: ttyS0 at MMIO 0xd8200000 (irq = 32) is a wmt serial
+uart.1: ttyS1 at MMIO 0xd82b0000 (irq = 33) is a wmt serial
+WMT Serial driver initialized: ok
+brd: module loaded
+loop: module loaded
+nbd: registered device at major 43
+pmem: 1 init
+PPP generic driver version 2.4.2
+PPP Deflate Compression module registered
+PPP BSD Compression module registered
+NET: Registered protocol family 24
+## Warning: "wmt.io.mac.off" not defined
+VIA Rhine Family Fast Ethernet Adapter Driver Ver. 5.08
+Copyright (c) 2002 VIA Technologies, Inc.
+eth0: VIA Rhine III Fast Ethernet Adapter
+eth0: MAC=00:40:63:42:76:47 IO=0xd8004000 Mem=0xd8004000  IRQ=10 
+usbcore: registered new interface driver asix
+Linux video capture interface: v2.00
+WonderMedia CMOS camera register OK 
+usbcore: registered new interface driver uvcvideo
+USB Video Class driver (v0.1.0)
+[wmt-vd] prob /dev/wmt-vd major 236, minor 0, prdt ffb1d000/cde0000, size 100 KB
+[wmt-vd] WonderMedia HW decoder driver inited
+[wmt-lock] init ok, major=242, minor=1
+## Warning: "wmt.gpo.cmos" not defined
+Can't get cmos config in u-boot!!!!
+nmi:major(252),minor(0)
+Dean:spi_probe
+spi irq num = 0x18
+B:0
+A:8
+spi_probe: /dev/WMT_SPI major number 153, minor number 0, device number 1
+WMT EVB SPI Controlor Driver OK!
+ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+ehci_hcd: block sizes: qh 60 qtd 96 itd 160 sitd 96
+PCI: enabling device 0000:00:04.0 (0040 -> 0042)
+ehci_hcd 0000:00:04.0: EHCI Host Controller
+drivers/usb/core/inode.c: creating file 'devices'
+drivers/usb/core/inode.c: creating file '001'
+ehci_hcd 0000:00:04.0: new USB bus registered, assigned bus number 1
+ehci_hcd 0000:00:04.0: reset hcs_params 0x102204 dbg=1 cc=2 pcc=2 ordered !ppc ports=4
+ehci_hcd 0000:00:04.0: reset hcc_params 6872 thresh 7 uframes 256/512/1024
+ehci_hcd 0000:00:04.0: reset command 080002 (park)=0 ithresh=8 period=1024 Reset HALT
+ehci_hcd 0000:00:04.0: MWI active
+ehci_hcd 0000:00:04.0: irq 43, io mem 0xd8007900
+ehci_hcd 0000:00:04.0: reset command 080002 (park)=0 ithresh=8 period=1024 Reset HALT
+ehci_hcd 0000:00:04.0: init command 010009 (park)=0 ithresh=1 period=256 RUN
+ehci_hcd 0000:00:04.0: USB 0.0 started, EHCI 1.00
+usb usb1: default language 0x0409
+usb usb1: udev 1, busnum 1, minor = 0
+usb usb1: New USB device found, idVendor=1d6b, idProduct=0002
+usb usb1: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+usb usb1: Product: EHCI Host Controller
+usb usb1: Manufacturer: Linux 2.6.32.9-default ehci_hcd
+usb usb1: SerialNumber: 0000:00:04.0
+usb usb1: uevent
+usb usb1: usb_probe_device
+usb usb1: configuration #1 chosen from 1 choice
+usb usb1: adding 1-0:1.0 (config #1, interface 0)
+usb 1-0:1.0: uevent
+hub 1-0:1.0: usb_probe_interface
+hub 1-0:1.0: usb_probe_interface - got id
+hub 1-0:1.0: USB hub found
+hub 1-0:1.0: 4 ports detected
+hub 1-0:1.0: standalone hub
+hub 1-0:1.0: no power switching (usb 1.0)
+hub 1-0:1.0: individual port over-current protection
+hub 1-0:1.0: power on to power good time: 20ms
+hub 1-0:1.0: local power source is good
+hub 1-0:1.0: trying to enable port power on non-switchable hub
+drivers/usb/core/inode.c: creating file '001'
+uhci_hcd: USB Universal Host Controller Interface driver
+PCI: enabling device 0000:00:05.0 (0000 -> 0001)
+uhci_hcd 0000:00:05.0: UHCI Host Controller
+drivers/usb/core/inode.c: creating file '002'
+uhci_hcd 0000:00:05.0: new USB bus registered, assigned bus number 2
+uhci_hcd 0000:00:05.0: detected 2 ports
+uhci_hcd 0000:00:05.0: uhci_check_and_reset_hc: cmd = 0x0000
+uhci_hcd 0000:00:05.0: Performing full reset
+uhci_hcd 0000:00:05.0: irq 43, io base 0xd8007b00
+usb usb2: default language 0x0409
+usb usb2: udev 1, busnum 2, minor = 128
+usb usb2: New USB device found, idVendor=1d6b, idProduct=0001
+usb usb2: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+usb usb2: Product: UHCI Host Controller
+usb usb2: Manufacturer: Linux 2.6.32.9-default uhci_hcd
+usb usb2: SerialNumber: 0000:00:05.0
+usb usb2: uevent
+usb usb2: usb_probe_device
+usb usb2: configuration #1 chosen from 1 choice
+usb usb2: adding 2-0:1.0 (config #1, interface 0)
+usb 2-0:1.0: uevent
+hub 2-0:1.0: usb_probe_interface
+hub 2-0:1.0: usb_probe_interface - got id
+hub 2-0:1.0: USB hub found
+hub 2-0:1.0: 2 ports detected
+hub 2-0:1.0: standalone hub
+hub 2-0:1.0: no power switching (usb 1.0)
+hub 2-0:1.0: individual port over-current protection
+hub 2-0:1.0: power on to power good time: 2ms
+hub 2-0:1.0: local power source is good
+hub 2-0:1.0: trying to enable port power on non-switchable hub
+drivers/usb/core/inode.c: creating file '001'
+PCI: enabling device 0000:00:06.0 (0000 -> 0001)
+uhci_hcd 0000:00:06.0: UHCI Host Controller
+drivers/usb/core/inode.c: creating file '003'
+uhci_hcd 0000:00:06.0: new USB bus registered, assigned bus number 3
+uhci_hcd 0000:00:06.0: detected 2 ports
+uhci_hcd 0000:00:06.0: uhci_check_and_reset_hc: cmd = 0x0000
+uhci_hcd 0000:00:06.0: Performing full reset
+uhci_hcd 0000:00:06.0: irq 43, io base 0xd8008d00
+usb usb3: default language 0x0409
+usb usb3: udev 1, busnum 3, minor = 256
+usb usb3: New USB device found, idVendor=1d6b, idProduct=0001
+usb usb3: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+usb usb3: Product: UHCI Host Controller
+usb usb3: Manufacturer: Linux 2.6.32.9-default uhci_hcd
+usb usb3: SerialNumber: 0000:00:06.0
+usb usb3: uevent
+usb usb3: usb_probe_device
+usb usb3: configuration #1 chosen from 1 choice
+usb usb3: adding 3-0:1.0 (config #1, interface 0)
+usb 3-0:1.0: uevent
+hub 3-0:1.0: usb_probe_interface
+hub 3-0:1.0: usb_probe_interface - got id
+hub 3-0:1.0: USB hub found
+hub 3-0:1.0: 2 ports detected
+hub 3-0:1.0: standalone hub
+hub 3-0:1.0: no power switching (usb 1.0)
+hub 3-0:1.0: individual port over-current protection
+hub 3-0:1.0: power on to power good time: 2ms
+hub 3-0:1.0: local power source is good
+hub 3-0:1.0: trying to enable port power on non-switchable hub
+drivers/usb/core/inode.c: creating file '001'
+usbcore: registered new interface driver cdc_acm
+cdc_acm: v0.26:USB Abstract Control Model driver for USB modems and ISDN adapters
+Initializing USB Mass Storage driver...
+usbcore: registered new interface driver usb-storage
+USB Mass Storage support registered.
+usbcore: registered new interface driver usbserial
+debug:1 by rubbitxiao
+drivers/usb/serial/usb-serial.c: Had to override the open usb serial operation with the generic one.
+drivers/usb/serial/usb-serial.c: Had to override the write usb serial operation with the generic one.
+drivers/usb/serial/usb-serial.c: Had to override the close usb serial operation with the generic one.
+drivers/usb/serial/usb-serial.c: Had to override the write_room usb serial operation with the generic one.
+drivers/usb/serial/usb-serial.c: Had to override the chars_in_buffer usb serial operation with the generic one.
+drivers/usb/serial/usb-serial.c: Had to override the read_bulk_callback usb serial operation with the generic one.
+drivers/usb/serial/usb-serial.c: Had to override the write_bulk_callback usb serial operation with the generic one.
+USB Serial support registered for generic
+usbcore: registered new interface driver usbserial_generic
+usbserial: USB Serial Driver core
+drivers/usb/serial/usb-serial.c: Had to override the read_bulk_callback usb serial operation with the generic one.
+drivers/usb/serial/usb-serial.c: Had to override the write_bulk_callback usb serial operation with the generic one.
+USB Serial support registered for GSM modem (1-port)
+usbcore: registered new interface driver option
+option: v0.7.2:USB Driver for GSM modems
+usbcore: registered new interface driver VIAUSBModem
+LinuxVIAUSBD1.0.4:VIA USB CDMA Modem
+drivers/usb/serial/usb-serial.c: Had to override the disconnect usb serial operation with the generic one.
+USB Serial support registered for pl2303
+usbcore: registered new interface driver pl2303
+pl2303: Prolific PL2303 USB to serial adaptor driver
+drivers/usb/serial/usb-serial.c: Had to override the write usb serial operation with the generic one.
+drivers/usb/serial/usb-serial.c: Had to override the close usb serial operation with the generic one.
+drivers/usb/serial/usb-serial.c: Had to override the write_room usb serial operation with the generic one.
+drivers/usb/serial/usb-serial.c: Had to override the chars_in_buffer usb serial operation with the generic one.
+drivers/usb/serial/usb-serial.c: Had to override the read_bulk_callback usb serial operation with the generic one.
+drivers/usb/serial/usb-serial.c: Had to override the write_bulk_callback usb serial operation with the generic one.
+drivers/usb/serial/usb-serial.c: Had to override the disconnect usb serial operation with the generic one.
+drivers/usb/serial/usb-serial.c: Had to override the release usb serial operation with the generic one.
+USB Serial support registered for GobiSerial
+usbcore: registered new interface driver GobiSerial
+GobiSerial: 1.0.20
+udc: VIA UDC driver, version: 3 December 2007 (dma)
+udc: pullup_disable()
+mount_thread
+udc: wmt_udc_probe - request_irq(0x2B) pass!
+mice: PS/2 mouse device common for all mice
+## Warning: "wmt.io.ts" not defined
+===== UTK Touch Disabled!=====
+wmt_rtc on
+using rtc device, wmt-rtc, for alarms
+wmt-rtc wmt-rtc.0: rtc core: registered wmt-rtc as rtc0
+WMT Real Time Clock driver v0.54 initialized: ok
+device-mapper: ioctl: 4.15.0-ioctl (2009-04-01) initialised: dm-devel@redhat.com
+device-mapper: multipath: version 1.1.0 loaded
+device-mapper: multipath round-robin: version 1.0.0 loaded
+device-mapper: multipath queue-length: version 0.1.0 loaded
+device-mapper: multipath service-time: version 0.2.0 loaded
+WMT ATSMB (AHB To SD/MMC Bus) controller registered!
+## Warning: "rootdev" not defined
+Do not initialize mmc1 when boot from NandFlash.
+[MMC/SD driver] ATSMB1 probe Failed!
+sdmmc1: probe of sdmmc1.0 failed with error -22
+## Warning: "wmt.io.bri_max" not defined
+------------------ lcd_backlight_probe ---------------
+Registered led device: lcd-backlight
+usbcore: registered new interface driver hiddev
+usbcore: registered new interface driver usbhid
+usbhid: v2.6:USB HID core driver
+logger: created 256K log 'log_main'
+logger: created 256K log 'log_events'
+logger: created 64K log 'log_radio'
+Advanced Linux Sound Architecture Driver Version 1.0.21.
+No device for DAI VT1603
+No device for DAI HWDEC
+i2c_transfer returned -5
+WM8900 0-001b: Device is not a WM8900 - ID 0
+WMT_SOC: dai_name=i2s, codec_name=vt1603
+No device for DAI wmt-i2s-dai
+[VPP] set audio(fmt 16,rate 44100,ch 2)
+VT1603 Audio Codec 0.10
+wmt.audio.i2s = vt1603:f1:f2:f1:f1:100
+playback volume percent[100%]
+## Warning: "wmt.audio.channel.invert" not defined
+## Warning: "wmt.audio.amp" not defined
+## Warning: "wmt.audio.call.sound.output" not defined
+asoc: VT1603 <-> wmt-i2s-dai mapping ok
+ALSA device list:
+  #0: WMT_SOC (VT1603)
+TCP cubic registered
+NET: Registered protocol family 17
+lib80211: common routines for IEEE802.11 drivers
+lib80211_crypt: registered algorithm 'NULL'
+## Warning: "wmt.io.pwkey" not defined
+input: kpadPower as /devices/virtual/input/input0
+[wmt_pm_init] battery_used = 3
+PMC: WonderMedia Power Management driver
+PMC: Power button is configured as soft power
+[wmt_pm_init] power_on = 100 resume = 0 power_up = 500
+registered taskstats version 1
+===== VT1609 Touch Screen Driver Enabled!=====
+## Warning: "wmt.vt1609.param" not defined
+wmt.vt1609.param not set, use default parameter.
+[VT160X] bus=spi0, p.x = 800, p.y = 480, gpio=2, irq=6
+## Warning: "wmt.tsc.key" not defined
+Read wmt.tsc.key Failed.
+input: VT1609 TSC as /devices/virtual/input/input1
+VT1609 Touch Screen Driver Installed!
+>>>> vx_max=2290,vy_max=2140, vxy=17 ver=0.1 <<<<
+VT1609 Dual Touch Support Enabled.
+wmt-rtc wmt-rtc.0: setting system clock to 2026-10-30 11:20:52 UTC (1793359252)
+VT160X Battery: SPI0, Sample Interval:10 sec
+VT160X SAR-ADC Battery Driver Installed!
+mount_thread
+ehci_hcd 0000:00:04.0: GetStatus port 1 status 001403 POWER sig=k CSC CONNECT
+hub 1-0:1.0: port 1: status 0501 change 0001
+uhci_hcd 0000:00:05.0: port 1 portsc 01aa,00
+uhci_hcd 0000:00:05.0: port 2 portsc 008a,00
+uhci_hcd 0000:00:06.0: port 1 portsc 008a,00
+uhci_hcd 0000:00:06.0: port 2 portsc 008a,00
+yaffs: dev is 32505867 name is "mtdblock11"
+yaffs: passed flags ""
+yaffs: Attempting MTD mount on 31.11, "mtdblock11"
+yaffs: restored from checkpoint
+yaffs_read_super: isCheckpointed 1
+VFS: Mounted root (yaffs2 filesystem) on device 31:11.
+Freeing init memory: 148K
+Warning: unable to open an initial console.
+hub 1-0:1.0: state 7 ports 4 chg 0002 evt 0000
+hub 1-0:1.0: port 1, status 0501, change 0000, 480 Mb/s
+ehci_hcd 0000:00:04.0: port 1 low speed --> companion
+init: /init.rc: 341: invalid option 'disable'
+init: /init.rc: 372: invalid command 'echo'
+init: /init.rc: 372: invalid command 'echo'
+init: /init.rc: 372: invalid command 'echo'
+init: /init.rc: 388: invalid command 'echo'
+ehci_hcd 0000:00:04.0: GetStatus port 1 status 003402 POWER OWNER sig=k CSC
+hub 2-0:1.0: state 7 ports 2 chg 0000 evt 0002
+uhci_hcd 0000:00:05.0: port 1 portsc 01a3,00
+hub 2-0:1.0: port 1, status 0301, change 0001, 1.5 Mb/s
+hub 2-0:1.0: debounce: port 1: total 100ms stable 100ms status 0x301
+usb 2-1: new low speed USB device using uhci_hcd and address 2
+usb 2-1: skipped 1 descriptor after interface
+usb 2-1: default language 0x0409
+usb 2-1: udev 2, busnum 2, minor = 129
+usb 2-1: New USB device found, idVendor=046d, idProduct=c077
+usb 2-1: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+usb 2-1: Product: USB Optical Mouse
+usb 2-1: Manufacturer: Logitech
+usb 2-1: uevent
+usb 2-1: usb_probe_device
+usb 2-1: configuration #1 chosen from 1 choice
+usb 2-1: adding 2-1:1.0 (config #1, interface 0)
+usb 2-1:1.0: uevent
+usbserial_generic 2-1:1.0: usb_probe_interface
+usbserial_generic 2-1:1.0: usb_probe_interface - got id
+usbhid 2-1:1.0: usb_probe_interface
+usbhid 2-1:1.0: usb_probe_interface - got id
+input: Logitech USB Optical Mouse as /devices/pci0000:00/0000:00:05.0/usb2/2-1/2-1:1.0/input/input2
+generic-usb 0003:046D:C077.0001: input: USB HID v1.11 Mouse [Logitech USB Optical Mouse] on usb-0000:00:05.0-1/input0
+drivers/usb/core/inode.c: creating file '002'
+hub 3-0:1.0: state 7 ports 2 chg 0000 evt 0000
+hub 1-0:1.0: state 7 ports 4 chg 0000 evt 0002
+usb usb1: uevent
+usb 1-0:1.0: uevent
+usb usb2: uevent
+usb 2-0:1.0: uevent
+usb 2-1: uevent
+usb 2-1:1.0: uevent
+usb usb3: uevent
+usb 3-0:1.0: uevent
+init: too many mtd partitions
+yaffs: dev is 32505870 name is "mtdblock14"
+yaffs: passed flags ""
+yaffs: Attempting MTD mount on 31.14, "mtdblock14"
+usb usb3: suspend_rh (auto-stop)
+yaffs: restored from checkpoint
+yaffs_read_super: isCheckpointed 1
+yaffs: dev is 32505871 name is "mtdblock15"
+yaffs: passed flags ""
+yaffs: Attempting MTD mount on 31.15, "mtdblock15"
+yaffs: restored from checkpoint
+yaffs_read_super: isCheckpointed 1
+init: cannot find '/system/etc/install-recovery.sh', disabling 'flash_recovery'
+warning: `dhcpcd' uses 32-bit capabilities (legacy support in use)
+ rx_thresh : 18 ([S&F]=0x38, 64DW=0x18)
+eth0: failed to detect cable link
+## Warning: "wmt.gpo.modem2g" not defined
+## Warning: "wmt.gpo.modem2g" not defined
+## Warning: "wmt.gpo.modem2g" not defined
+Bow: wmt_batt_init  
+## Warning: "wmt.sys.dcin.batfull" not defined
+## Warning: "wmt.io.batt.fullmax" not defined
+Bow: Probe...0
+[wmt_check_touch_env]: ===== Touch ID should be IT7260!=====
+[wmt_check_touch_env]: ===== Touch ID should be SSD2531TS!=====
+===== Touch ID should be pixcir_tango_m48!=====
+[wmt_check_touch_env]: ===== Touch ID should be TM1930_I2C!=====
+[wmt_check_touch_env]: ===== Touch ID should be HT70009STS!=====
+mxc622x driver: init
+gsensor format is error in u-boot!!!
+ecompass driver: init
+input: ecompass_data as /devices/virtual/input/input3
+[dump_kpad_devinfo]: ====================V1.1===============================
+[dump_kpad_devinfo]: kpad id:commonboard   devnum:1
+[dump_kpad_devinfo]: 	dev[0] type:rc_1
+[dump_kpad_devinfo]: 	irq[0]:6,
+[dump_kpad_devinfo]: 
+[dump_kpad_devinfo]: 	key number:4
+[dump_kpad_devinfo]: 	key0:73(115),
+[dump_kpad_devinfo]: 	key1:72(114),
+[dump_kpad_devinfo]: 	key2:9e(158),
+[dump_kpad_devinfo]: 	key3:8b(139),
+[dump_kpad_devinfo]: 
+[dump_kpad_devinfo]: 	longkey num:0
+[dump_kpad_devinfo]: ===================================================
+[kpadall_probe]: registered irq: 6 ***
+input: keypad as /devices/virtual/input/input4
+usbnet: exports duplicate symbol usbnet_resume (owned by kernel)
+usbcore: registered new interface driver SR9700_android
+## Warning: "wmt.ffplayer.debug" not defined
+usbcore: registered new interface driver dm9601
+## Warning: "rootdev" not defined
+## Warning: "wmt.nousb.device" not defined
+yaffs: dev is 32505872 name is "mtdblock16"
+yaffs: passed flags ""
+yaffs: Attempting MTD mount on 31.16, "mtdblock16"
+yaffs: restored from checkpoint
+yaffs_read_super: isCheckpointed 1
+procfile_write get 0
+--> stop progress bar
+[VPP] GOVW TG 0,vpu en 0,vpu path 0
+[CUR] set colfmt ARGB
+[CUR] YUV444 --> ARGB chg fb 2
+uhci_hcd 0000:00:05.0: reserve dev 2 ep81-INT, period 8, phase 4, 106 us
+[CUR] govrh_CUR_set_framebuffer
+[CUR] set colfmt ARGB
+1div_addr_offs=0x374 PLL_NO=2 
+find the equal value
+PLLN112, PLLD5, PLLP2, divisor4 freq=35000000Hz 
+PLL0x5470, pll addr =0xd8130208
+PLLN112, PLLD5, PLLP2, div4 div_addr_offs=0x374
+read divisor=4, pll=0x5470 from register
+[GOVRH] set clock 35000000 ==> 35000000
+[HDMI] set pixclk 35000000
+irq 6: nobody cared (try booting with the "irqpoll" option)
+Backtrace: 
+[<c0032244>] (dump_backtrace+0x0/0x10c) from [<c0444e40>] (dump_stack+0x18/0x1c)
+ r6:00000006 r5:00000000 r4:c05957cc r3:c05e20e0
+[<c0444e28>] (dump_stack+0x0/0x1c) from [<c0075978>] (__report_bad_irq+0x80/0xb0)
+[<c00758f8>] (__report_bad_irq+0x0/0xb0) from [<c0075b34>] (note_interrupt+0x18c/0x1f8)
+ r4:c05957cc r3:00000000
+[<c00759a8>] (note_interrupt+0x0/0x1f8) from [<c007611c>] (handle_level_irq+0xd4/0xfc)
+[<c0076048>] (handle_level_irq+0x0/0xfc) from [<c002d040>] (asm_do_IRQ+0x40/0x88)
+ r5:00000006 r4:c05a3f5c
+[<c002d000>] (asm_do_IRQ+0x0/0x88) from [<c002db50>] (__irq_svc+0x30/0xa0)
+Exception stack(0xc9dffdb8 to 0xc9dffe00)
+fda0:                                                       00000100 00000000
+fdc0: c9dffe00 20000013 00000202 00000000 c9dfe000 c0593608 c05289cc c06025c0
+fde0: c06025e8 c9dffe3c c9dffe40 c9dffe00 c004ec54 c004e84c 20000013 ffffffff
+ r6:00000040 r5:c9dffdec r4:00000040 r3:20000013
+[<c004e7f8>] (__do_softirq+0x0/0x130) from [<c004ec54>] (irq_exit+0x48/0x50)
+[<c004ec0c>] (irq_exit+0x0/0x50) from [<c002d044>] (asm_do_IRQ+0x44/0x88)
+[<c002d000>] (asm_do_IRQ+0x0/0x88) from [<c002db50>] (__irq_svc+0x30/0xa0)
+Exception stack(0xc9dffe70 to 0xc9dffeb8)
+fe60:                                     83000000 c0448d70 d8110300 80820000
+fe80: 00000000 00000002 00000002 c0448dd0 c05289cc ccc1eca0 c05a3f78 c9dffefc
+fea0: 00000010 c9dffeb8 80808080 c007148c 20000013 ffffffff
+ r6:00000040 r5:c9dffea4 r4:00000040 r3:20000013
+[<c0071344>] (state_store+0x0/0x244) from [<c01d3f98>] (kobj_attr_store+0x1c/0x28)
+ r8:c01d3f7c r7:ccc0dcf8 r6:c9dfff70 r5:cd1a1378 r4:cd1a1360
+[<c01d3f7c>] (kobj_attr_store+0x0/0x28) from [<c00f7b9c>] (sysfs_write_file+0x104/0x188)
+[<c00f7a98>] (sysfs_write_file+0x0/0x188) from [<c00aa0f4>] (vfs_write+0xbc/0x170)
+[<c00aa038>] (vfs_write+0x0/0x170) from [<c00aa3cc>] (sys_write+0x44/0x74)
+ r8:00000002 r7:00000000 r6:00000000 r5:4a0f5d5c r4:c9ee4f20
+[<c00aa388>] (sys_write+0x0/0x74) from [<c002df40>] (ret_fast_syscall+0x0/0x28)
+ r8:c002e0c4 r7:00000004 r6:00000000 r5:a7e07374 r4:a7e07160
+handlers:
+[<c0321e04>] (vt1603_ts_isr+0x0/0x74)
+[<bf0535d4>] (kpad_colrow_interrupt+0x0/0x2e4 [kpad])
+Disabling IRQ #6
+[state_store] G-Sensor Enable 
+request_suspend_state: wakeup (3->0) at 45450458002 (2026-10-30 11:21:35.545899000 UTC)
+in nfc_wait_idle(): data area uncorrected err 
+in nfc_wait_idle(): data area uncorrected err 
+in nfc_wait_idle(): data area uncorrected err 
+## Warning: "rootdev" not defined
+bind to g_file_storage --> -19
+is WonderMedia Technology
+mod_data.file[i]=/dev/block/loop0 cd284d20
+mod_data1.file1[i]=/dev/block/loop0 cd2849c0
+mod_data2.file2[i]=/dev/block/loop0 cd284d20
+mod_data.file[i]=/dev/block/mmcblk0 cd2843e0
+mod_data1.file1[i]=/dev/block/mmcblk1 cd284ea0
+mod_data2.file2[i]=/dev/block/mmcblk0 cd2843e0
+g_file_storage gadget: File-backed Storage Gadget, version: 20 October 2004
+g_file_storage gadget: Number of LUNs=2
+udc: gri pullup_enable()
+## Warning: "wmt.gpo.gps" not defined
+fan GEIO_STOP_LOGO
+[Boot Animation] animation_stop 
+wmt-vd wmt-vd.0: firmware: requesting wm8650_vdec_jpeg.pm.raw
+init: untracked pid 2164 exited
+wmt-vd wmt-vd.0: firmware: requesting wm8650_vdec_jpeg.dm.raw
+init: untracked pid 2173 exited
+wmt-vd wmt-vd.0: firmware: requesting wm8650_vdec_mpeg.pm.raw
+init: untracked pid 2181 exited
+wmt-vd wmt-vd.0: firmware: requesting wm8650_vdec_mpeg.dm.raw
+init: untracked pid 2187 exited
+wmt-vd wmt-vd.0: firmware: requesting wm8650_vdec_mpeg4.pm.raw
+init: untracked pid 2193 exited
+wmt-vd wmt-vd.0: firmware: requesting wm8650_vdec_mpeg4.dm.raw
+init: untracked pid 2202 exited
+wmt-vd wmt-vd.0: firmware: requesting wm8650_vdec_h264.pm.raw
+init: untracked pid 2211 exited
+wmt-vd wmt-vd.0: firmware: requesting wm8650_vdec_h264.dm.raw
+init: untracked pid 2220 exited
+wmt-vd wmt-vd.0: firmware: requesting wm8650_vdec_copybit.pm.raw
+init: untracked pid 2229 exited
+wmt-vd wmt-vd.0: firmware: requesting wm8650_vdec_copybit.dm.raw
+init: untracked pid 2239 exited
+wmt-vd wmt-vd.0: firmware: requesting wm8650_venc_jpeg.pm.raw
+init: untracked pid 2250 exited
+wmt-vd wmt-vd.0: firmware: requesting wm8650_venc_jpeg.dm.raw
+[DSP] boot OK!!! Version: 1.2.3 build 2 (built: Jun  8 2011 15:40:05)
+[DSP] vdec_copybit version: 1.0 build 4
+init: untracked pid 2261 exited
+[CUR] govrh_CUR_set_enable 1
+save exit: isCheckpointed 1
+save exit: isCheckpointed 1
+save exit: isCheckpointed 1
+save exit: isCheckpointed 1
+in nfc_wait_idle(): data area uncorrected err 
+in nfc_wait_idle(): data area uncorrected err 
+rt3070sta driver V1.0.1
+rtusb init --->
+wifi_power_ctrl 1
+wifi power up:6:1:6:d8110040:d8110080:d81100C0
+wifi excute_gpio_op 1
+hub 1-0:1.0: state 7 ports 4 chg 0000 evt 0010
+ehci_hcd 0000:00:04.0: GetStatus port 4 status 001803 POWER sig=j CSC CONNECT
+hub 1-0:1.0: port 4, status 0501, change 0001, 480 Mb/s
+hub 1-0:1.0: debounce: port 4: total 100ms stable 100ms status 0x501
+ehci_hcd 0000:00:04.0: port 4 high speed
+ehci_hcd 0000:00:04.0: GetStatus port 4 status 001005 POWER sig=se0 PE CONNECT
+usb 1-4: new high speed USB device using ehci_hcd and address 3
+ehci_hcd 0000:00:04.0: port 4 high speed
+ehci_hcd 0000:00:04.0: GetStatus port 4 status 001005 POWER sig=se0 PE CONNECT
+usb 1-4: default language 0x0409
+usb 1-4: udev 3, busnum 1, minor = 2
+usb 1-4: New USB device found, idVendor=148f, idProduct=2070
+usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+usb 1-4: Product: 802.11 g WLAN
+usb 1-4: Manufacturer: Ralink
+usb 1-4: SerialNumber: 1.0
+usb 1-4: uevent
+usb 1-4: usb_probe_device
+usb 1-4: configuration #1 chosen from 1 choice
+usb 1-4: adding 1-4:1.0 (config #1, interface 0)
+usb 1-4:1.0: uevent
+usbserial_generic 1-4:1.0: usb_probe_interface
+usbserial_generic 1-4:1.0: usb_probe_interface - got id
+drivers/usb/core/inode.c: creating file '003'
+rt2870 1-4:1.0: usb_probe_interface
+rt2870 1-4:1.0: usb_probe_interface - got id
+
+
+=== pAd = cf002000, size = 503224 ===
+
+ RTMPAllocAdapterBlock, Status=0
+usbcore: registered new interface driver rt2870
+ RTMPAllocTxRxRingMemory, Status=0
+-->RTUSBVenderReset
+RTUSBVenderReset
+Key1Str is Invalid key length(0) or Type(0)
+Key2Str is Invalid key length(0) or Type(0)
+Key3Str is Invalid key length(0) or Type(0)
+Key4Str is Invalid key length(0) or Type(0)
+1. Phy Mode = 5
+2. Phy Mode = 5
+NVM is Efuse and its size =2d[2d0-2fc] 
+phy mode> Error! The chip does not support 5G band 6!
+RTMPSetPhyMode: channel is out of range, use first channel=1 
+3. Phy Mode = 9
+MCS Set = ff 00 00 00 01
+== rt28xx_init, Status=0
+0x1300 = 00064300
+===> rt28xx_close
+---> RTMPFreeTxRxRingMemory
+- RTMPFreeTxRxRingMemory
+usbcore: deregistering interface driver rt2870
+rtusb_disconnect: unregister usbnet usb-0000:00:04.0-4
+RtmpOSNetDevDetach(): RtmpOSNetDeviceDetach(), dev->name=ra0!
+ RTUSB disconnect successfully
+wifi_power_ctrl 0
+wifi power up:6:1:6:d8110040:d8110080:d81100C0
+wifi excute_gpio_op 0
+- rtusb exit
+hub 1-0:1.0: state 7 ports 4 chg 0000 evt 0010
+ehci_hcd 0000:00:04.0: GetStatus port 4 status 001002 POWER sig=se0 CSC
+hub 1-0:1.0: port 4, status 0100, change 0001, 12 Mb/s
+usb 1-4: USB disconnect, address 3
+usb 1-4: unregistering device
+usb 1-4: usb_disable_device nuking all URBs
+usb 1-4: unregistering interface 1-4:1.0
+usb 1-4:1.0: uevent
+usb 1-4: uevent
+hub 1-0:1.0: debounce: port 4: total 100ms stable 100ms status 0x100
+rt3070sta driver V1.0.1
+rtusb init --->
+wifi_power_ctrl 1
+wifi power up:6:1:6:d8110040:d8110080:d81100C0
+wifi excute_gpio_op 1
+hub 1-0:1.0: state 7 ports 4 chg 0000 evt 0010
+ehci_hcd 0000:00:04.0: GetStatus port 4 status 001803 POWER sig=j CSC CONNECT
+hub 1-0:1.0: port 4, status 0501, change 0001, 480 Mb/s
+hub 1-0:1.0: debounce: port 4: total 100ms stable 100ms status 0x501
+ehci_hcd 0000:00:04.0: port 4 high speed
+ehci_hcd 0000:00:04.0: GetStatus port 4 status 001005 POWER sig=se0 PE CONNECT
+usb 1-4: new high speed USB device using ehci_hcd and address 4
+ehci_hcd 0000:00:04.0: port 4 high speed
+ehci_hcd 0000:00:04.0: GetStatus port 4 status 001005 POWER sig=se0 PE CONNECT
+usb 1-4: default language 0x0409
+usb 1-4: udev 4, busnum 1, minor = 3
+usb 1-4: New USB device found, idVendor=148f, idProduct=2070
+usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+usb 1-4: Product: 802.11 g WLAN
+usb 1-4: Manufacturer: Ralink
+usb 1-4: SerialNumber: 1.0
+usb 1-4: uevent
+usb 1-4: usb_probe_device
+usb 1-4: configuration #1 chosen from 1 choice
+usb 1-4: adding 1-4:1.0 (config #1, interface 0)
+usb 1-4:1.0: uevent
+usbserial_generic 1-4:1.0: usb_probe_interface
+usbserial_generic 1-4:1.0: usb_probe_interface - got id
+drivers/usb/core/inode.c: creating file '004'
+rt2870 1-4:1.0: usb_probe_interface
+rt2870 1-4:1.0: usb_probe_interface - got id
+
+
+=== pAd = cf07f000, size = 503224 ===
+
+ RTMPAllocAdapterBlock, Status=0
+usbcore: registered new interface driver rt2870
+ RTMPAllocTxRxRingMemory, Status=0
+-->RTUSBVenderReset
+RTUSBVenderReset
+Key1Str is Invalid key length(0) or Type(0)
+Key2Str is Invalid key length(0) or Type(0)
+Key3Str is Invalid key length(0) or Type(0)
+Key4Str is Invalid key length(0) or Type(0)
+1. Phy Mode = 5
+2. Phy Mode = 5
+NVM is Efuse and its size =2d[2d0-2fc] 
+phy mode> Error! The chip does not support 5G band 6!
+RTMPSetPhyMode: channel is out of range, use first channel=1 
+3. Phy Mode = 9
+RTMPFilterCalibration - can't find a valid value, loopcnt=102 stop calibratingMCS Set = ff 00 00 00 01
+== rt28xx_init, Status=0
+0x1300 = 00064300
+==>rt_ioctl_siwfreq::SIOCSIWFREQ[cmd=0x8b04] (Channel=1)
+PeerAssocReqSanity - IE_EXT_CAPABILITY!
+Rcv Wcid(1) AddBAReq
+Start Seq = 00000003
+Rcv Wcid(1) AddBAReq
+Start Seq = 00000001
+hub 1-0:1.0: state 7 ports 4 chg 0000 evt 0004
+ehci_hcd 0000:00:04.0: GetStatus port 2 status 001403 POWER sig=k CSC CONNECT
+hub 1-0:1.0: port 2, status 0501, change 0001, 480 Mb/s
+hub 1-0:1.0: debounce: port 2: total 100ms stable 100ms status 0x501
+ehci_hcd 0000:00:04.0: port 2 low speed --> companion
+ehci_hcd 0000:00:04.0: GetStatus port 2 status 003402 POWER OWNER sig=k CSC
+hub 1-0:1.0: state 7 ports 4 chg 0000 evt 0004
+hub 2-0:1.0: state 7 ports 2 chg 0000 evt 0004
+uhci_hcd 0000:00:05.0: port 2 portsc 01a3,00
+hub 2-0:1.0: port 2, status 0301, change 0001, 1.5 Mb/s
+hub 2-0:1.0: debounce: port 2: total 100ms stable 100ms status 0x301
+usb 2-2: new low speed USB device using uhci_hcd and address 3
+usb 2-2: skipped 1 descriptor after interface
+usb 2-2: default language 0x0409
+usb 2-2: udev 3, busnum 2, minor = 130
+usb 2-2: New USB device found, idVendor=413c, idProduct=2107
+usb 2-2: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+usb 2-2: Product: Dell USB Entry Keyboard
+usb 2-2: Manufacturer: DELL
+usb 2-2: uevent
+usb 2-2: usb_probe_device
+usb 2-2: configuration #1 chosen from 1 choice
+usb 2-2: adding 2-2:1.0 (config #1, interface 0)
+usb 2-2:1.0: uevent
+usbserial_generic 2-2:1.0: usb_probe_interface
+usbserial_generic 2-2:1.0: usb_probe_interface - got id
+usbhid 2-2:1.0: usb_probe_interface
+usbhid 2-2:1.0: usb_probe_interface - got id
+input: DELL Dell USB Entry Keyboard as /devices/pci0000:00/0000:00:05.0/usb2/2-2/2-2:1.0/input/input5
+uhci_hcd 0000:00:05.0: reserve dev 3 ep81-INT, period 8, phase 4, 118 us
+generic-usb 0003:413C:2107.0002: input: USB HID v1.10 Keyboard [DELL Dell USB Entry Keyboard] on usb-0000:00:05.0-2/input0
+drivers/usb/core/inode.c: creating file '003'
+ACT - Update2040CoexistFrameAndNotify. BSSCoexist2040 = 1. EventANo = 0. 
+ACT-BuildIntolerantChannelRep(Size=0)
+ACT - Update2040CoexistFrameAndNotify. BSSCoexist2040 = 1. EventANo = 0. 
+ACT-BuildIntolerantChannelRep(Size=0)
+ACT - Update2040CoexistFrameAndNotify. BSSCoexist2040 = 1. EventANo = 0. 
+ACT-BuildIntolerantChannelRep(Size=0)
+ACT - Update2040CoexistFrameAndNotify. BSSCoexist2040 = 1. EventANo = 0. 
+ACT-BuildIntolerantChannelRep(Size=0)
+ACT - Update2040CoexistFrameAndNotify. BSSCoexist2040 = 1. EventANo = 0. 
+ACT-BuildIntolerantChannelRep(Size=0)
+[CUR] govrh_CUR_set_framebuffer
+[CUR] set colfmt ARGB
+[CUR] govrh_CUR_set_framebuffer
+[CUR] set colfmt ARGB
+hub 2-0:1.0: state 7 ports 2 chg 0000 evt 0006
+uhci_hcd 0000:00:05.0: port 1 portsc 018a,00
+hub 2-0:1.0: port 1, status 0300, change 0003, 1.5 Mb/s
+usb 2-1: USB disconnect, address 2
+usb 2-1: unregistering device
+usb 2-1: usb_disable_device nuking all URBs
+uhci_hcd 0000:00:05.0: shutdown urb ccea95a0 ep1in-intr
+uhci_hcd 0000:00:05.0: release dev 2 ep81-INT, period 8, phase 4, 106 us
+usb 2-1: unregistering interface 2-1:1.0
+[CUR] govrh_CUR_set_enable 0
+usb 2-1:1.0: uevent
+usb 2-1: uevent
+hub 2-0:1.0: debounce: port 1: total 100ms stable 100ms status 0x300
+uhci_hcd 0000:00:05.0: port 2 portsc 018a,00
+hub 2-0:1.0: port 2, status 0300, change 0003, 1.5 Mb/s
+usb 2-2: USB disconnect, address 3
+usb 2-2: unregistering device
+usb 2-2: usb_disable_device nuking all URBs
+uhci_hcd 0000:00:05.0: shutdown urb c989e5a0 ep1in-intr
+uhci_hcd 0000:00:05.0: release dev 3 ep81-INT, period 8, phase 4, 118 us
+usb 2-2: unregistering interface 2-2:1.0
+usb 2-2:1.0: uevent
+usb 2-2: uevent
+hub 2-0:1.0: debounce: port 2: total 100ms stable 100ms status 0x300
+usb usb2: suspend_rh (auto-stop)
+ACT - Update2040CoexistFrameAndNotify. BSSCoexist2040 = 1. EventANo = 0. 
+ACT-BuildIntolerantChannelRep(Size=0)
+[state_store] G-Sensor Enable 
+request_suspend_state: wakeup (0->0) at 2180778635002 (2026-10-30 11:57:06.817600000 UTC)
+mmc0: new high speed SDHC card at address 1234
+mmcblk0: mmc0:1234 SA08G 7.28 GiB 
+ mmcblk0: p1
+mmcblk0: retrying using single block read
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2048
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2049
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2050
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2051
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2052
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2053
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2054
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2055
+Buffer I/O error on device mmcblk0p1, logical block 0
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2056
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2057
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2058
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2059
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2060
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2061
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2062
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2063
+Buffer I/O error on device mmcblk0p1, logical block 1
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2064
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2065
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2066
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2067
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2068
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2069
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2070
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2071
+Buffer I/O error on device mmcblk0p1, logical block 2
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2072
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2073
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2074
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2075
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2076
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2077
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2078
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2079
+Buffer I/O error on device mmcblk0p1, logical block 3
+mmcblk0: retrying using single block read
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2048
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2049
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2050
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2051
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2052
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2053
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2054
+mmcblk0: error -110 sending status comand
+mmcblk0: error 4 sending read/write command, response 0x0, card status 0x0
+end_request: I/O error, dev mmcblk0, sector 2055
+Buffer I/O error on device mmcblk0p1, logical block 0
+mmc0: card 1234 removed
+mmc0: new high speed SDHC card at address 1234
+mmcblk0: mmc0:1234 SA08G 7.28 GiB 
+ mmcblk0: p1
+hub 1-0:1.0: state 7 ports 4 chg 0000 evt 0002
+ehci_hcd 0000:00:04.0: GetStatus port 1 status 001403 POWER sig=k CSC CONNECT
+hub 1-0:1.0: port 1, status 0501, change 0001, 480 Mb/s
+hub 1-0:1.0: debounce: port 1: total 100ms stable 100ms status 0x501
+ehci_hcd 0000:00:04.0: port 1 low speed --> companion
+usb usb2: wakeup_rh (auto-start)
+ehci_hcd 0000:00:04.0: GetStatus port 1 status 003402 POWER OWNER sig=k CSC
+ehci_hcd 0000:00:04.0: GetStatus port 2 status 001403 POWER sig=k CSC CONNECT
+hub 1-0:1.0: port 2, status 0501, change 0001, 480 Mb/s
+hub 1-0:1.0: debounce: port 2: total 100ms stable 100ms status 0x501
+ehci_hcd 0000:00:04.0: port 2 low speed --> companion
+ehci_hcd 0000:00:04.0: GetStatus port 2 status 003402 POWER OWNER sig=k CSC
+hub 1-0:1.0: state 7 ports 4 chg 0000 evt 0004
+hub 2-0:1.0: state 7 ports 2 chg 0000 evt 0002
+uhci_hcd 0000:00:05.0: port 1 portsc 01a3,00
+hub 2-0:1.0: port 1, status 0301, change 0001, 1.5 Mb/s
+hub 2-0:1.0: debounce: port 1: total 100ms stable 100ms status 0x301
+usb 2-1: new low speed USB device using uhci_hcd and address 4
+usb 2-1: skipped 1 descriptor after interface
+usb 2-1: default language 0x0409
+usb 2-1: udev 4, busnum 2, minor = 131
+usb 2-1: New USB device found, idVendor=046d, idProduct=c077
+usb 2-1: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+usb 2-1: Product: USB Optical Mouse
+usb 2-1: Manufacturer: Logitech
+usb 2-1: uevent
+usb 2-1: usb_probe_device
+usb 2-1: configuration #1 chosen from 1 choice
+usb 2-1: adding 2-1:1.0 (config #1, interface 0)
+usb 2-1:1.0: uevent
+usbserial_generic 2-1:1.0: usb_probe_interface
+usbserial_generic 2-1:1.0: usb_probe_interface - got id
+usbhid 2-1:1.0: usb_probe_interface
+usbhid 2-1:1.0: usb_probe_interface - got id
+input: Logitech USB Optical Mouse as /devices/pci0000:00/0000:00:05.0/usb2/2-1/2-1:1.0/input/input6
+uhci_hcd 0000:00:05.0: reserve dev 4 ep81-INT, period 8, phase 4, 106 us
+generic-usb 0003:046D:C077.0003: input: USB HID v1.11 Mouse [Logitech USB Optical Mouse] on usb-0000:00:05.0-1/input0
+drivers/usb/core/inode.c: creating file '004'
+uhci_hcd 0000:00:05.0: port 2 portsc 01a3,00
+hub 2-0:1.0: port 2, status 0301, change 0001, 1.5 Mb/s
+[CUR] govrh_CUR_set_enable 1
+hub 2-0:1.0: debounce: port 2: total 100ms stable 100ms status 0x301
+usb 2-2: new low speed USB device using uhci_hcd and address 5
+usb 2-2: skipped 1 descriptor after interface
+usb 2-2: default language 0x0409
+usb 2-2: udev 5, busnum 2, minor = 132
+usb 2-2: New USB device found, idVendor=413c, idProduct=2107
+usb 2-2: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+usb 2-2: Product: Dell USB Entry Keyboard
+usb 2-2: Manufacturer: DELL
+usb 2-2: uevent
+usb 2-2: usb_probe_device
+usb 2-2: configuration #1 chosen from 1 choice
+usb 2-2: adding 2-2:1.0 (config #1, interface 0)
+usb 2-2:1.0: uevent
+usbserial_generic 2-2:1.0: usb_probe_interface
+usbserial_generic 2-2:1.0: usb_probe_interface - got id
+usbhid 2-2:1.0: usb_probe_interface
+usbhid 2-2:1.0: usb_probe_interface - got id
+input: DELL Dell USB Entry Keyboard as /devices/pci0000:00/0000:00:05.0/usb2/2-2/2-2:1.0/input/input7
+uhci_hcd 0000:00:05.0: reserve dev 5 ep81-INT, period 8, phase 4, 118 us
+generic-usb 0003:413C:2107.0004: input: USB HID v1.10 Keyboard [DELL Dell USB Entry Keyboard] on usb-0000:00:05.0-2/input0
+drivers/usb/core/inode.c: creating file '005'
+hub 2-0:1.0: state 7 ports 2 chg 0000 evt 0004
+save exit: isCheckpointed 1
+save exit: isCheckpointed 1
+save exit: isCheckpointed 1
+[state_store] G-Sensor Enable 
+request_suspend_state: wakeup (0->0) at 2211992147002 (2026-10-30 11:57:38.031112000 UTC)
+ACT - Update2040CoexistFrameAndNotify. BSSCoexist2040 = 1. EventANo = 0. 
+ACT-BuildIntolerantChannelRep(Size=0)
+[CUR] govrh_CUR_set_framebuffer
+[CUR] set colfmt ARGB
+[CUR] govrh_CUR_set_framebuffer
+[CUR] set colfmt ARGB
+ACT - Update2040CoexistFrameAndNotify. BSSCoexist2040 = 1. EventANo = 0. 
+ACT-BuildIntolerantChannelRep(Size=0)

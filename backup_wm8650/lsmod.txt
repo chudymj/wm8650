@@ -1,0 +1,8 @@
+rt3070sta 702028 1 - Live 0xbf14c000
+g_file_storage 25456 0 - Live 0xbf07a000
+dm9601 5697 0 - Live 0xbf073000
+sr9700 5559 0 - Live 0xbf06c000
+kpad 27780 0 - Live 0xbf053000
+gsensor_mecs_md 4142 2 - Live 0xbf04c000
+gsensor_mxc622x_md 2479 2 - Live 0xbf046000
+wmt_battery_md 10928 0 - Live 0xbf000000

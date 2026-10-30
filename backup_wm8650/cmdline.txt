@@ -1,0 +1,1 @@
+mem=212M root=/dev/mtdblock11 noinitrd rootfstype=yaffs2 rw console=ttyS0,115200n8 lpj=AUTO init=/init wmtvo=2:1:24:800:480:60 quiet

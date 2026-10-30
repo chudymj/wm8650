@@ -1,0 +1,5 @@
+# Duże binarne zrzuty pamięci Flash oraz bibliotek Androida
+backup_wm8650/*.bin
+backup_wm8650/lib/
+*.tar
+*.img
