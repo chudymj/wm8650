@@ -1,5 +1,27 @@
-# Duże binarne zrzuty pamięci Flash oraz bibliotek Androida
+# Pamięć podręczna i duże zrzuty binarne
 backup_wm8650/*.bin
 backup_wm8650/lib/
 *.tar
+*.tar.xz
 *.img
+*.iso
+
+# Źródła jądra Linux i artefakty budowania
+linux-*/
+modules_wm8650/
+uImage
+zImage*
+
+# Skompilowane pliki binarne i obiekty
+*.o
+*.ko
+*.so
+tools/wm8650_wifi_on
+
+# Pliki tymczasowe, edytory i wrażliwe
+*.swp
+*.bak
+*~
+*.log
+askpass.sh
+session.*

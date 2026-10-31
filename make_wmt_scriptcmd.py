@@ -9,12 +9,13 @@ import time
 import zlib
 
 SCRIPT_CONTENT = """\
-textout 30 30 "Booting Debian GNU/Linux (WM8650)..." 00FF00
-textout -1 -1 "Loading kernel 2.6.32.9 from NAND (0x1300000)..." FFFF00
-nandrw r 0x1300000 0x1000000 0x800000
-setenv bootargs mem=212M root=/dev/mmcblk0p2 rootwait noinitrd rootfstype=ext3 rw console=ttyS0,115200n8 console=tty0 lpj=AUTO init=/sbin/init-wm8650 wmtvo=2:1:24:800:480:60
-textout -1 -1 "Starting Debian from /dev/mmcblk0p2..." 00FFFF
-bootm 0x1000000
+textout 30 30 "Booting Debian Linux 6.1 (WM8650)..." 00FF00
+textout -1 -1 "Loading uImage from SD card..." FFFF00
+mmcinit 0
+fatload mmc 0 0x2000000 uImage
+setenv bootargs mem=248M root=/dev/mmcblk0p2 rootwait rw console=tty0 console=ttyS0,115200n8 panic=10
+textout -1 -1 "Starting Linux 6.1..." 00FFFF
+bootm 0x2000000
 """
 
 def make_uboot_script(script_text: str, name: bytes = b"WM8650-Debian-Boot") -> bytes:

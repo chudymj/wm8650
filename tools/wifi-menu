@@ -1,0 +1,145 @@
+#!/bin/bash
+
+# Uruchomienie z uprawnieniami roota jeśli wywołano jako zwykły użytkownik
+if [ "$EUID" -ne 0 ]; then
+    exec sudo "$0" "$@"
+fi
+
+# Wykrycie interfejsu bezprzewodowego
+WIFI_IF=$(ip -br link | awk '/wlan|wlx/{print $1; exit}')
+
+# Jeśli interfejs nie jest widoczny, próba włączenia zasilania GPIO 6
+if [ -z "$WIFI_IF" ]; then
+    if [ -x /usr/local/bin/wifi-power-on ]; then
+        /usr/local/bin/wifi-power-on >/dev/null 2>&1
+        sleep 2
+        WIFI_IF=$(ip -br link | awk '/wlan|wlx/{print $1; exit}')
+    fi
+fi
+
+if [ -z "$WIFI_IF" ]; then
+    whiptail --title "Błąd Wi-Fi" --msgbox "Nie wykryto karty Wi-Fi!\nUpewnij się, że zasilanie Wi-Fi zostało włączone (/usr/local/bin/wifi-power-on)." 10 60
+    exit 1
+fi
+
+# Podniesienie interfejsu
+ip link set "$WIFI_IF" up 2>/dev/null || true
+
+# Ekran skanowania
+whiptail --title "Skaner Wi-Fi (WM8650)" --infobox "Skanowanie dostępnych sieci bezprzewodowych...\nProszę czekać (ok. 3-5 sekund)..." 8 55
+
+# Skanowanie sieci i pobranie SSID wraz z siłą sygnału
+SCAN_OUTPUT=$(iw dev "$WIFI_IF" scan 2>/dev/null || true)
+PARSED_NETS=$(echo "$SCAN_OUTPUT" | awk '
+    /BSS / { sig=""; }
+    /signal:/ { sig=$2; }
+    /SSID:/ {
+        sub(/^[ \t]*SSID: /, "");
+        if ($0 != "" && (!seen[$0] || sig > best_sig[$0])) {
+            seen[$0] = 1;
+            best_sig[$0] = sig;
+        }
+    }
+    END {
+        for (s in seen) {
+            print s "\t[" best_sig[s] " dBm]";
+        }
+    }
+' | sort -k1)
+
+if [ -z "$PARSED_NETS" ]; then
+    whiptail --title "Wi-Fi (WM8650)" --msgbox "Nie znaleziono żadnych sieci Wi-Fi w zasięgu!\nSpróbuj zbliżyć tablet do routera lub uruchomić program ponownie." 10 60
+    exit 1
+fi
+
+# Budowa listy dla whiptail
+MENU_ITEMS=()
+while IFS=$'\t' read -r ssid sig; do
+    [ -z "$ssid" ] && continue
+    MENU_ITEMS+=("$ssid" "$sig")
+done <<< "$PARSED_NETS"
+
+# Wybór sieci przez użytkownika
+CHOSEN_SSID=$(whiptail --title "Dostępne sieci Wi-Fi" \
+    --menu "Wybierz sieć z listy za pomocą strzałek i wciśnij Enter:" \
+    16 65 8 "${MENU_ITEMS[@]}" 3>&1 1>&2 2>&3)
+
+if [ $? -ne 0 ] || [ -z "$CHOSEN_SSID" ]; then
+    echo "Anulowano wybór sieci."
+    exit 0
+fi
+
+# Wprowadzenie hasła
+PASSWORD=$(whiptail --title "Hasło Wi-Fi: $CHOSEN_SSID" \
+    --passwordbox "Wprowadź hasło WPA/WPA2 do sieci: $CHOSEN_SSID\n(Pozostaw puste, jeśli sieć jest otwarta bez hasła):" \
+    11 65 3>&1 1>&2 2>&3)
+
+if [ $? -ne 0 ]; then
+    echo "Anulowano wprowadzanie hasła."
+    exit 0
+fi
+
+# Ekran łączenia
+whiptail --title "Łączenie z Wi-Fi" \
+    --infobox "Konfiguracja połączenia i pobieranie adresu IP z DHCP dla:\n$CHOSEN_SSID\n\nProszę czekać..." \
+    9 60
+
+# Konfiguracja wpa_supplicant
+cat <<WPA_HEAD > /etc/wpa_supplicant/wpa_supplicant.conf
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+WPA_HEAD
+
+if [ -n "$PASSWORD" ]; then
+    wpa_passphrase "$CHOSEN_SSID" "$PASSWORD" >> /etc/wpa_supplicant/wpa_supplicant.conf
+else
+    cat <<WPA_OPEN >> /etc/wpa_supplicant/wpa_supplicant.conf
+network={
+    ssid="$CHOSEN_SSID"
+    key_mgmt=NONE
+}
+WPA_OPEN
+fi
+chmod 600 /etc/wpa_supplicant/wpa_supplicant.conf
+
+# Aktualizacja konfiguracji sieciowej
+cat <<NET_CONF > /etc/network/interfaces
+auto lo
+iface lo inet loopback
+
+allow-hotplug eth0
+iface eth0 inet dhcp
+
+allow-hotplug $WIFI_IF
+iface $WIFI_IF inet dhcp
+    wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+NET_CONF
+
+# Restart wpa_supplicant i dhclient
+pkill -f "wpa_supplicant.*$WIFI_IF" 2>/dev/null || true
+pkill -f "dhclient.*$WIFI_IF" 2>/dev/null || true
+sleep 1
+
+wpa_supplicant -B -i "$WIFI_IF" -c /etc/wpa_supplicant/wpa_supplicant.conf
+dhclient -v "$WIFI_IF" 2>/dev/null &
+
+# Oczekiwanie na adres IP (do 15 sekund)
+IP=""
+for i in $(seq 1 15); do
+    IP=$(ip -4 addr show "$WIFI_IF" 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1 | head -n1)
+    if [ -n "$IP" ]; then
+        break
+    fi
+    sleep 1
+done
+
+if [ -n "$IP" ]; then
+    whiptail --title "Sukces! Połączono z Wi-Fi" \
+        --msgbox "Pomyślnie połączono z siecią:\n$CHOSEN_SSID\n\nAdres IP Wi-Fi tabletu: $IP\n\nKonfiguracja została zapisana i będzie automatycznie wznawiana przy każdym uruchomieniu tabletu.\n\nMożesz teraz odłączyć kabel LAN i połączyć się przez Wi-Fi:\n  ssh chudy@$IP" \
+        15 65
+else
+    whiptail --title "Błąd połączenia" \
+        --msgbox "Nie udało się uzyskać adresu IP z sieci:\n$CHOSEN_SSID\n\nMożliwe przyczyny:\n- Błędne hasło Wi-Fi\n- Słaby sygnał\n- Serwer DHCP nie odpowiedział w wyznaczonym czasie.\n\nSpróbuj ponownie wywołać wifi-menu." \
+        14 60
+fi

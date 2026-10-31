@@ -142,9 +142,27 @@ if [ -e /proc/boot-splash ]; then
     echo 0 > /proc/boot-splash
 fi
 /bin/umount /proc 2>/dev/null
+
+# Reset palety i wymuszenie bialej czcionki na czarnym tle dla fbcon
+echo -en "\033]P7ffffff\033]P0000000\033[37;40m\033[2J\033[H" > /dev/tty0 2>/dev/null || true
+echo -en "\033]P7ffffff\033]P0000000\033[37;40m\033[2J\033[H" > /dev/console 2>/dev/null || true
+
 exec /sbin/init "$@"
 EOF
 chmod +x "$MNT_ROOT/sbin/init-wm8650"
+
+# Wymuszenie bialej czcionki na ekranie logowania
+cat > "$MNT_ROOT/etc/issue" <<'EOF'
+\033]P7ffffff\033]P0000000\033[37;40m\033[2J\033[H
+Debian GNU/Linux 7 (WM8650) \n \l
+
+EOF
+
+# Wylaczenie udevd - jądro 2.6.32 na ARM nie posiada wywolania accept4(),
+# przez co udevd wpada w petle bledow zabierajac 100% CPU i blokujac system.
+# Wszystkie wezly /dev sa juz wygenerowane statycznie.
+sed -i '2i exit 0' "$MNT_ROOT/etc/init.d/udev" 2>/dev/null || true
+sed -i '2i exit 0' "$MNT_ROOT/etc/init.d/udev-mtab" 2>/dev/null || true
 
 # Nazwa hosta
 echo "wm8650-debian" > "$MNT_ROOT/etc/hostname"
@@ -227,6 +245,11 @@ for mod in kpad wmt_battery_md rt3070sta; do
     insmod "/lib/modules/2.6.32.9-default/${mod}.ko" 2>/dev/null || modprobe "$mod" 2>/dev/null || true
 done
 
+# Kopia logow dmesg na partycje startowa FAT32 do diagnostyki
+mkdir -p /boot/wmt
+dmesg > /boot/wmt/boot_dmesg.txt 2>/dev/null || true
+echo "Debian uruchomiony: $(date)" > /boot/wmt/status.txt 2>/dev/null || true
+
 exit 0
 EOF
 chmod +x "$MNT_ROOT/etc/rc.local"
@@ -240,7 +263,7 @@ chroot "$MNT_ROOT" /bin/sh -c '
 '
 
 sync
-umount "$MNT_ROOT"
+umount -R "$MNT_ROOT" 2>/dev/null || (umount "$MNT_ROOT/proc" 2>/dev/null || true; umount "$MNT_ROOT" 2>/dev/null || true)
 rmdir "$MNT_BOOT" "$MNT_ROOT" 2>/dev/null || true
 
 echo "=================================================================="
