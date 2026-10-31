@@ -136,7 +136,7 @@ done
 
 if [ -n "$IP" ]; then
     whiptail --title "Sukces! Połączono z Wi-Fi" \
-        --msgbox "Pomyślnie połączono z siecią:\n$CHOSEN_SSID\n\nAdres IP Wi-Fi tabletu: $IP\n\nKonfiguracja została zapisana i będzie automatycznie wznawiana przy każdym uruchomieniu tabletu.\n\nMożesz teraz odłączyć kabel LAN i połączyć się przez Wi-Fi:\n  ssh chudy@$IP" \
+        --msgbox "Pomyślnie połączono z siecią:\n$CHOSEN_SSID\n\nAdres IP Wi-Fi tabletu: $IP\n\nKonfiguracja została zapisana i będzie automatycznie wznawiana przy każdym uruchomieniu tabletu.\n\nMożesz teraz odłączyć kabel LAN i połączyć się przez Wi-Fi:\n  ssh user@$IP" \
         15 65
 else
     whiptail --title "Błąd połączenia" \

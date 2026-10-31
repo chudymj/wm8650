@@ -52,7 +52,8 @@ def make_uboot_script(script_text: str, name: bytes = b"WM8650-Debian-Boot") -> 
     return header + payload
 
 if __name__ == "__main__":
-    out_path = sys.argv[1] if len(sys.argv) > 1 else "/home/chudy/Projekty/wm8650/wmt_scriptcmd"
+    default_out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "wmt_scriptcmd")
+    out_path = sys.argv[1] if len(sys.argv) > 1 else default_out
     img = make_uboot_script(SCRIPT_CONTENT)
     with open(out_path, "wb") as f:
         f.write(img)

@@ -107,7 +107,7 @@ Instalator:
 1. Włóż przygotowaną kartę microSD do slotu w tablecie i włącz zasilanie.
 2. Na ekranie LCD pojawi się komunikat U-Boota, pingwin Tux i logi startowe jądra 6.1 LTS.
 3. Po kilkunastu sekundach pojawi się prompt logowania konsoli:
-   * **Użytkownik:** `chudy` (hasło: `chudy`, pełne uprawnienia `sudo`)
+   * **Użytkownik:** `user` (hasło: `user`, pełne uprawnienia `sudo`)
    * **Root:** `root` (hasło: `root`)
 
 ### Konfiguracja sieci Wi-Fi
@@ -120,7 +120,7 @@ Pojawi się okienko tekstowe z wykrytymi sieciami w zasięgu. Wybierz swoją sie
 ### Dostęp przez SSH
 Z komputera w tej samej sieci lokalnej:
 ```bash
-ssh chudy@<ADRES_IP_TABLETU>
+ssh user@<ADRES_IP_TABLETU>
 ```
 
 ---

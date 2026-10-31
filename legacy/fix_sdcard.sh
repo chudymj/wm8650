@@ -8,7 +8,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 MNT_ROOT=""
-for path in /media/chudy/debian_rootfs /media/*/debian_rootfs; do
+for path in "/media/${SUDO_USER:-$USER}/debian_rootfs" /media/*/debian_rootfs; do
     if [ -d "$path/etc" ]; then
         MNT_ROOT="$path"
         break
@@ -158,5 +158,5 @@ sync
 echo "=================================================================="
 echo " GOTOWE! Nowa czcionka VGA i paleta FBIOPUTCMAP wgrane na karte."
 echo " Mozesz teraz odmontowac karte poleceniem:"
-echo "   sudo umount -R /media/chudy/WMTBOOT /media/chudy/debian_rootfs"
+echo "   sudo umount -R /media/*/WMTBOOT /media/*/debian_rootfs"
 echo "=================================================================="

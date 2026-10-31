@@ -156,10 +156,10 @@ cat <<'EOF' > "$MNT_ROOT/etc/hosts"
 127.0.1.1	wm8650
 EOF
 
-# Hasło roota: root, użytkownik: chudy / chudy
+# Hasło roota: root, użytkownik: user / user
 echo "root:root" | chroot "$MNT_ROOT" chpasswd
-chroot "$MNT_ROOT" useradd -m -s /bin/bash -G sudo chudy 2>/dev/null || true
-echo "chudy:chudy" | chroot "$MNT_ROOT" chpasswd
+chroot "$MNT_ROOT" useradd -m -s /bin/bash -G sudo user 2>/dev/null || true
+echo "user:user" | chroot "$MNT_ROOT" chpasswd
 
 # /etc/fstab
 cat <<'EOF' > "$MNT_ROOT/etc/fstab"
@@ -269,7 +269,7 @@ echo "=================================================================="
 echo "  Debian 12 (Bookworm) armel został pomyślnie zainstalowany!"
 echo "  Konta:"
 echo "    - root: root"
-echo "    - chudy: chudy (sudo)"
+echo "    - user: user (sudo)"
 echo "  Sprzęt i usługi:"
 echo "    - sysvinit-core (~25 MB RAM idle, ~185 MB wolnej pamięci!)"
 echo "    - ZRAM 80 MB (kompresja LZ4)"
