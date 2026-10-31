@@ -15,7 +15,8 @@ Projekt zastępuje przestarzałego i nieużywalnego Androida 2.2 (Froyo) / Linuk
 * **Łączność:**
   * **Wi-Fi:** Wewnętrzny moduł USB Ralink RT3070 (`148f:2070`) na porcie USB 4, sterowany linią zasilania GPIO Bank 0 Pin 6 (otwarty sterownik `rt2800usb` + firmware `rt2870.bin`)
   * **Ethernet:** Zintegrowany kontroler VIA Rhine III Fast Ethernet (`eth0`, adapter 30-pin)
-* **Pamięć wewnętrzna:**
+* **Pamięć masowa:**
+  * **Karta microSD:** minimum **1 GB**, zalecana **2 GB – 4 GB** (obsługa kart SD/SDHC do 32 GB, MBR)
   * **SPI NOR Flash** (512 KB, `mtd0..mtd5`): `w-load`, `U-Boot 1.1.4` (nietykalna – gwarantuje brak możliwości uceglenia urządzenia)
   * **NAND Flash** (2 GB Samsung `K9GAG08U0E`, `mtd6..mtd16`): oryginalne partycje Androida 2.2
 
@@ -76,10 +77,16 @@ wm8650/
 
 ## 🛠️ Instrukcja instalacji krok po kroku
 
-### Krok 1: Sformatowanie karty microSD
+### Krok 1: Wymagania i formatowanie karty microSD
+
+* **Wymagania dotyczące karty:**
+  * **Minimalna pojemność:** **1 GB** (zainstalowany system bazowy z jądrem i modułami zajmuje łącznie ok. ~550 MB).
+  * **Zalecana pojemność:** **2 GB – 4 GB lub większa** (zapewnia zapas na pamięć podręczną APT, instalowanie dodatkowych pakietów i logi systemowe).
+  * **Obsługiwany standard:** SD / microSD / SDHC do **32 GB** (karty formatowane ze standardową tablicą partycji **MBR / DOS**).
+
 Karta microSD powinna posiadać 2 partycje:
 1. **Partycja 1:** ~64–128 MB, system plików **FAT32** (oznaczona jako bootowalna `WMTBOOT`).
-2. **Partycja 2:** reszta karty (np. 2–8 GB), system plików **ext4** (`debian_rootfs`).
+2. **Partycja 2:** pozostała przestrzeń karty, system plików **ext4** (`debian_rootfs`).
 
 ### Krok 2: Skompilowanie jądra Linux 6.1 LTS
 Na komputerze PC (Linux Mint / Ubuntu / Debian) z zainstalowanym kompilatorem ARM (`gcc-arm-linux-gnueabi`):
