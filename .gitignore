@@ -25,3 +25,6 @@ tools/wm8650_wifi_on
 *.log
 askpass.sh
 session.*
+
+__pycache__/
+*.pyc
