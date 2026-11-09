@@ -4,6 +4,9 @@ Kompletny zestaw narzędzi, konfiguracji i skryptów umożliwiający uruchomieni
 
 Projekt zastępuje przestarzałego i nieużywalnego Androida 2.2 (Froyo) / Linuksa 2.6.32 ultralekkim, w pełni funkcjonalnym systemem serwerowo-konsolowym ze wsparciem dla sieci Wi-Fi, Ethernet, ZRAM oraz nowoczesnych protokołów (OpenSSH, WPA2, TLS 1.3).
 
+> 🛡️ **NOWOŚĆ (Gałąź `feature/soc-ids-dashboard`):**
+> Pełna specyfikacja techniczna i plan wdrożenia **Domowego Monitora Sieci + Systemu Wykrywania Włamań (IDS / Canary Honeypot)** na 5 przełączanych ekranach framebuffera (`/dev/fb0`) z obsługą ekranu dotykowego (`VT1609`), alarmów dźwiękowych (`VT1603 I2S`) + wibracji oraz przełączaniem na konsolę (`tty1` ↔ `tty3`) znajduje się w pliku **[PLAN_ROZBUDOWY_SOC_IDS.md](./PLAN_ROZBUDOWY_SOC_IDS.md)**.
+
 ---
 
 ## 📱 Specyfikacja sprzętowa tabletu (`puzhi_7inch_vt1609_ts`)
