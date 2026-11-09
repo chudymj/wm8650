@@ -135,9 +135,10 @@ apt-get update
 apt-get install -y --no-install-recommends sysvinit-core sysv-rc sysvinit-utils
 apt-get remove -y --purge systemd systemd-sysv libpam-systemd 2>/dev/null || true
 apt-get install -y --no-install-recommends \
-    udev procps kmod net-tools iproute2 wireless-tools wpasupplicant iw whiptail \
+    udev procps kmod net-tools iproute2 iputils-ping wireless-tools wpasupplicant iw whiptail \
     nano curl wget ca-certificates openssh-server locales tzdata htop sudo rfkill \
-    firmware-misc-nonfree wireless-regdb
+    firmware-misc-nonfree wireless-regdb \
+    python3-minimal python3-pil fonts-dejavu-core kbd
 apt-get clean
 "
 
@@ -211,14 +212,41 @@ chmod 600 "$MNT_ROOT/etc/wpa_supplicant/wpa_supplicant.conf"
 # Trwałe nazewnictwo interfejsów (wyłączenie net_setup_link, zachowanie wlan0)
 ln -sf /dev/null "$MNT_ROOT/etc/udev/rules.d/80-net-setup-link.rules"
 
-# Narzędzia Wi-Fi i zasilania sprzętowego
-mkdir -p "$MNT_ROOT/usr/local/bin"
+# Narzędzia Wi-Fi, zasilania sprzętowego, dotyku, dźwięku oraz SOC/IDS Dashboard
+mkdir -p "$MNT_ROOT/usr/local/bin" "$MNT_ROOT/etc/wm8650-soc"
 if [ -f "$SCRIPT_DIR/tools/wm8650_wifi_on.c" ]; then
     arm-linux-gnueabi-gcc -O2 "$SCRIPT_DIR/tools/wm8650_wifi_on.c" -o "$MNT_ROOT/usr/local/bin/wifi-power-on" 2>/dev/null || \
     cp "$SCRIPT_DIR/tools/wm8650_wifi_on" "$MNT_ROOT/usr/local/bin/wifi-power-on" 2>/dev/null || true
 fi
+if [ -f "$SCRIPT_DIR/tools/wm8650_beep.c" ]; then
+    arm-linux-gnueabi-gcc -O2 "$SCRIPT_DIR/tools/wm8650_beep.c" -o "$MNT_ROOT/usr/local/bin/wm8650-beep" 2>/dev/null || \
+    cp "$SCRIPT_DIR/tools/wm8650_beep" "$MNT_ROOT/usr/local/bin/wm8650-beep" 2>/dev/null || true
+fi
+if [ -f "$SCRIPT_DIR/tools/wm8650_touchd.c" ]; then
+    arm-linux-gnueabi-gcc -O2 "$SCRIPT_DIR/tools/wm8650_touchd.c" -o "$MNT_ROOT/usr/local/bin/wm8650-touchd" 2>/dev/null || \
+    cp "$SCRIPT_DIR/tools/wm8650_touchd" "$MNT_ROOT/usr/local/bin/wm8650-touchd" 2>/dev/null || true
+fi
 [ -f "$SCRIPT_DIR/tools/wifi-menu" ] && cp "$SCRIPT_DIR/tools/wifi-menu" "$MNT_ROOT/usr/local/bin/wifi-menu"
+[ -f "$SCRIPT_DIR/tools/soc" ] && cp "$SCRIPT_DIR/tools/soc" "$MNT_ROOT/usr/local/bin/soc"
+[ -f "$SCRIPT_DIR/soc_dashboard/wm8650_soc_dashboard.py" ] && \
+    cp "$SCRIPT_DIR/soc_dashboard/wm8650_soc_dashboard.py" "$MNT_ROOT/usr/local/bin/wm8650-soc-dashboard"
 chmod 755 "$MNT_ROOT/usr/local/bin/"* 2>/dev/null || true
+
+if [ -f "$SCRIPT_DIR/soc_dashboard/wm8650-soc.init" ]; then
+    cp "$SCRIPT_DIR/soc_dashboard/wm8650-soc.init" "$MNT_ROOT/etc/init.d/wm8650-soc"
+    chmod 755 "$MNT_ROOT/etc/init.d/wm8650-soc"
+    chroot "$MNT_ROOT" update-rc.d wm8650-soc defaults 99 2>/dev/null || true
+fi
+
+cat <<'EOF' > "$MNT_ROOT/etc/motd"
+
+======================================================================
+  WonderMedia WM8650 - Debian 12 (Bookworm) & Linux 6.1 LTS
+  - Wpisz 'soc'       aby wrocic na ekran graficzny SOC/IDS (tty3)
+  - Wpisz 'wifi-menu' aby skonfigurowac polaczenie Wi-Fi
+======================================================================
+
+EOF
 
 # Usługa wczesnego startu sprzętu (ZRAM + GPIO 6 Wi-Fi)
 cat <<'EOF' > "$MNT_ROOT/etc/init.d/wm8650-boot"

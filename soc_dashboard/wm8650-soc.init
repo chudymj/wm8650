@@ -1,0 +1,68 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          wm8650-soc
+# Required-Start:    $local_fs $network
+# Required-Stop:     $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: WM8650 SOC & IDS Framebuffer Dashboard (tty3)
+### END INIT INFO
+
+TOUCHD_BIN="/usr/local/bin/wm8650-touchd"
+DASH_BIN="/usr/local/bin/wm8650-soc-dashboard"
+TOUCHD_PID="/run/wm8650-touchd.pid"
+DASH_PID="/run/wm8650-soc.pid"
+
+case "$1" in
+    start)
+        echo "Uruchamianie WM8650 SOC & IDS Dashboard na tty3..."
+        mkdir -p /etc/wm8650-soc
+
+        if [ -x "$TOUCHD_BIN" ]; then
+            start-stop-daemon --start --quiet --background \
+                --make-pidfile --pidfile "$TOUCHD_PID" \
+                --exec "$TOUCHD_BIN" || true
+        fi
+
+        if [ -c /dev/tty3 ]; then
+            TERM=linux setterm -cursor off -blank 0 > /dev/tty3 2>/dev/null || true
+        fi
+
+        if [ -x "$DASH_BIN" ]; then
+            start-stop-daemon --start --quiet --background \
+                --make-pidfile --pidfile "$DASH_PID" \
+                --exec /usr/bin/python3 -- "$DASH_BIN" || true
+        fi
+
+        if command -v chvt >/dev/null 2>&1; then
+            chvt 3 2>/dev/null || true
+        fi
+        ;;
+    stop)
+        echo "Zatrzymywanie WM8650 SOC & IDS Dashboard..."
+        start-stop-daemon --stop --quiet --pidfile "$DASH_PID" --remove-pidfile || true
+        start-stop-daemon --stop --quiet --pidfile "$TOUCHD_PID" --remove-pidfile || true
+        if command -v chvt >/dev/null 2>&1; then
+            chvt 1 2>/dev/null || true
+        fi
+        ;;
+    restart)
+        "$0" stop
+        sleep 1
+        "$0" start
+        ;;
+    status)
+        if [ -f "$DASH_PID" ] && kill -0 "$(cat "$DASH_PID")" 2>/dev/null; then
+            echo "wm8650-soc-dashboard dziala (PID $(cat "$DASH_PID"))."
+        else
+            echo "wm8650-soc-dashboard jest zatrzymany."
+            exit 1
+        fi
+        ;;
+    *)
+        echo "Uzycie: $0 {start|stop|restart|status}"
+        exit 1
+        ;;
+esac
+
+exit 0

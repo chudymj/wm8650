@@ -1,0 +1,3 @@
+#!/bin/sh
+# Przelacza ekran z konsoli tekstowej (tty1/tty2) z powrotem na graficzny SOC/IDS Dashboard (tty3)
+chvt 3

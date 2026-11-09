@@ -1,8 +1,16 @@
 # Plan Rozbudowy: Cyber-Rama SOC & Domowy IDS (`wm8650-soc-dashboard`)
 
-> **INSTRUKCJA DLA MODELU AI PRZEJMUJĄCEGO ZADANIE NA KOMPUTERZE DEVELOPERSKIM:**
-> Ten dokument stanowi **kompletną, samowystarczalną specyfikację techniczną i architektoniczną** uzgodnioną z użytkownikiem. Zawiera wszystkie wyekstrahowane adresy rejestrów MMIO procesora WonderMedia WM8650, protokoły magistrali SPI0 oraz układu MFD VIA `VT1603`/`VT1609`, współczynniki kalibracji ekranu dotykowego z `uboot_env.txt`, architekturę 5-zakładkowego interfejsu na `/dev/fb0` (800×480 RGB565), logikę czujników IDS oraz zasady współdziałania z konsolą Linuksa (`tty1` ↔ `tty3`).
-> **Nie musisz niczego zgadywać ani szukać zewnętrznej dokumentacji sprzętowej.** Możesz od razu przystąpić do implementacji plików wymienionych w Sekcji 7.
+> **INSTRUKCJA I ZASADY JAKOŚCI (GUARDRAILS) DLA MODELU AI (ZWŁASZCZA KLASY FLASH):**
+> Ten dokument stanowi **kompletną, samowystarczalną specyfikację techniczną i architektoniczną** uzgodnioną z użytkownikiem, a pierwsza pełna wersja kodu została już zaimplementowana w katalogach `tools/` oraz `soc_dashboard/`.
+> Podczas dalszego rozwijania, modyfikowania lub debugowania projektu **BEZWZGLĘDNIE przestrzegaj poniższych reguł**:
+> 1. **ZAKAZ SKRACANIA KODU I PLACEHOLDERÓW:** Nigdy nie zastępuj istniejących funkcji, zakładek UI ani obsługi rejestrów komentarzami typu `# TODO`, `# reszta kodu bez zmian` czy `...`. Edytuj wyłącznie konkretne bloki kodu za pomocą narzędzia edycji fragmentów, zachowując 100% istniejącej funkcjonalności wszystkich 5 zakładek.
+> 2. **ZAKAZ ZGADYWANIA ADRESÓW REJESTRÓW:** Procesor to WonderMedia WM8650 (`ARM926EJ-S`, `armel`). Korzystaj wyłącznie z adresów MMIO udokumentowanych w Sekcji 3 (`PMC 0xD8130000`, `GPIO 0xD8110000`, `SPI0 0xD8240000`, `I2S 0xD80ED800`) oraz protokołu 3-bajtowego `VT1603`/`VT1609`.
+> 3. **ZAKAZ AUTOMATYCZNEGO PRZEŁĄCZANIA ZAKŁADEK PRZY ALARMIE:** Wątek wykrywający incydent (`WARN` / `ALERT`) ma prawo jedynie zwiększyć licznik nieprzeczytanych zdarzeń (`unread_warn` / `unread_alert`), podświetlić zakładkę na pasku górnym i wywołać `/usr/local/bin/wm8650-beep`. Nigdy nie zmieniaj `STATE.active_tab` bez kliknięcia/klawisza użytkownika.
+> 4. **OCHRONA KONSOLI `tty1`/`tty2`:** Przed każdym zapisem do `/dev/fb0` musi być sprawdzany warunek `/sys/class/tty/tty0/active == "tty3"`. Gdy użytkownik przełączy się na terminal tekstowy (`chvt 1`), zapis do `/dev/fb0` musi być wstrzymany.
+> 5. **OBOWIĄZKOWA WERYFIKACJA PO KAŻDEJ ZMIANIE:** Po każdej edycji plików `.c`, `.py` lub `.sh` obowiązkowo uruchom sprawdzenie składni i kompilacji:
+>    * `gcc -fsyntax-only -Wall tools/wm8650_beep.c tools/wm8650_touchd.c tools/wm8650_wifi_on.c` (lub `make -C tools`)
+>    * `python3 -m py_compile soc_dashboard/wm8650_soc_dashboard.py`
+>    * `bash -n install_debian12_bookworm.sh soc_dashboard/wm8650-soc.init`
 
 ---
 
