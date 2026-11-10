@@ -539,6 +539,17 @@ def canary_honeypot_loop():
 
 
 def handle_click(x: int, y: int):
+    # If user is currently in Linux text console (tty1/tty2) and taps the top bar,
+    # switch back to the graphical dashboard (tty3) so keyboard is not required to return!
+    if not is_dashboard_vt_active():
+        if y < 70:
+            trigger_beep("click")
+            try:
+                subprocess.run(["chvt", "3"], check=False)
+            except Exception:
+                pass
+        return
+
     # Top navigation bar (height 56 px, 5 tabs x 160 px)
     if y < 56:
         tab_idx = min(4, max(0, x // 160))
