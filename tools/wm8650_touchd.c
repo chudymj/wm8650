@@ -65,10 +65,11 @@ static void init_spi0_and_vt1609(volatile uint8_t *pmc, volatile uint8_t *gpio, 
     REG32(pmc + 0x250) |= (1u << 11) | (1u << 12) | (1u << 15);
     REG32(pmc + 0x254) |= (1u << 3) | (1u << 4);
 
-    /* Configure GP11 (0x004B) bits 0..3 as hardware SPI0 */
-    REG8(gpio + 0x004B) &= ~0x0F;
-    REG8(gpio + 0x048B) |= 0x0F;
-    REG8(gpio + 0x04CB) |= 0x0E;
+    /* Configure GPIO Bank 2 (offset 0x48): clear bits 24..27 for hardware SPI0 function */
+    REG32(gpio + 0x48) &= ~(0x0Fu << 24);
+    /* Enable pull-up for MISO (bit 25) */
+    REG32(gpio + 0x488) |= (1u << 25);
+    REG32(gpio + 0x4C8) |= (1u << 25);
 
     /* Initialize SPI0 controller */
     REG32(spi + 0x00) = (30u << 21) | (1u << 16) | (1u << 17);

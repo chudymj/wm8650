@@ -53,10 +53,11 @@ static void hw_enable_clocks_and_pinmux(volatile uint8_t *pmc, volatile uint8_t 
     /* Enable AUD_CLK (2) in PMCE3 (0x25C) */
     REG32(pmc + 0x25C) |= (1u << 2);
 
-    /* Configure SPI0 pins (GP11: MOSI=0, MISO=1, SS=2, CLK=3 -> clear bits for HW SPI mode) */
-    REG8(gpio + 0x004B) &= ~0x0F;
-    REG8(gpio + 0x048B) |= 0x0F;
-    REG8(gpio + 0x04CB) |= 0x0E;
+    /* Configure GPIO Bank 2 (offset 0x48): clear bits 24..27 for hardware SPI0 function */
+    REG32(gpio + 0x48) &= ~(0x0Fu << 24);
+    /* Enable pull-up for MISO (bit 25) */
+    REG32(gpio + 0x488) |= (1u << 25);
+    REG32(gpio + 0x4C8) |= (1u << 25);
 
     /* Configure I2S pins (GP10 -> 0x00 for HW I2S mode, Pin sharing bit 2 = 0 for I2S) */
     REG8(gpio + 0x004A) = 0x00;

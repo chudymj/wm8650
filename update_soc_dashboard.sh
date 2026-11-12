@@ -13,18 +13,10 @@ set -e
 #     ./update_soc_dashboard.sh root@192.168.1.XX
 # ==============================================================================
 
-TARGET="${1:-}"
+TARGET="${1:-user@192.168.9.34}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-if [ -z "$TARGET" ]; then
-    echo "Użycie:"
-    echo "  1) Aktualizacja istniejącej karty SD w czytniku (bez formatowania):"
-    echo "     sudo $0 /dev/mmcblk0   (lub /dev/sdb)"
-    echo ""
-    echo "  2) Aktualizacja przez SSH na działający tablet:"
-    echo "     $0 root@<IP_TABLETU>"
-    exit 1
-fi
+echo "Docelowy host / urządzenie: $TARGET"
 
 echo "[1/4] Kompilacja narzędzi sprzętowych C (wm8650_wifi_on, wm8650_beep, wm8650_touchd)..."
 if ! command -v arm-linux-gnueabi-gcc >/dev/null 2>&1; then
@@ -168,6 +160,7 @@ ssh $SSH_OPTS "$SSH_TARGET" "sh -e -c '
     \$SUDO mv /tmp/wm8650_soc_dashboard.py /usr/local/bin/wm8650-soc-dashboard
     \$SUDO mv /tmp/libwm8650_rgb565.so /usr/local/lib/libwm8650_rgb565.so
     \$SUDO chmod 755 /usr/local/bin/wifi-power-on /usr/local/bin/wm8650-beep /usr/local/bin/wm8650-touchd /usr/local/bin/wifi-menu /usr/local/bin/soc /usr/local/bin/wm8650-soc-dashboard /usr/local/lib/libwm8650_rgb565.so
+    \$SUDO ldconfig
 
     \$SUDO mv /tmp/wm8650-soc.init /etc/init.d/wm8650-soc
     \$SUDO chmod 755 /etc/init.d/wm8650-soc

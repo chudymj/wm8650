@@ -252,7 +252,7 @@ CANARY_PORTS = [
 
 class SharedState:
     def __init__(self):
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
         self.active_tab = 0  # 0: Overview, 1: LAN Hosts, 2: IDS, 3: Alarm Log
         self.unread_warn = [0, 0, 0, 0]
         self.unread_alert = [0, 0, 0, 0]
@@ -435,19 +435,33 @@ def toggle_host_known(mac: str):
     REDRAW_EVENT.set()
 
 
-def resolve_hostname_async(ip: str):
-    def _worker():
-        try:
-            name, _, _ = socket.gethostbyaddr(ip)
-            if name:
-                short = name.split(".")[0]
-                with STATE.lock:
-                    STATE.host_names[ip] = short
-                REDRAW_EVENT.set()
-        except Exception:
-            pass
+RESOLVE_QUEUE = collections.deque()
+RESOLVE_SEEN = set()
 
-    threading.Thread(target=_worker, daemon=True).start()
+
+def queue_hostname_resolve(ip: str):
+    if not ip or ip == "---" or ip in RESOLVE_SEEN:
+        return
+    RESOLVE_SEEN.add(ip)
+    RESOLVE_QUEUE.append(ip)
+
+
+def dns_resolver_worker():
+    while True:
+        ip = None
+        if RESOLVE_QUEUE:
+            ip = RESOLVE_QUEUE.popleft()
+        if ip:
+            try:
+                name, _, _ = socket.gethostbyaddr(ip)
+                if name:
+                    short = name.split(".")[0]
+                    with STATE.lock:
+                        STATE.host_names[ip] = short
+                    REDRAW_EVENT.set()
+            except Exception:
+                pass
+        time.sleep(0.5)
 
 
 def acknowledge_all_alarms():
@@ -703,8 +717,7 @@ def lan_and_arp_guard_loop():
 
                 mac_to_ip = {}
                 for ip_addr, mac, _ in arp_entries:
-                    if ip_addr not in STATE.host_names:
-                        resolve_hostname_async(ip_addr)
+                    queue_hostname_resolve(ip_addr)
 
                     if mac in mac_to_ip and mac_to_ip[mac] != ip_addr:
                         ip1 = mac_to_ip[mac]
@@ -1491,26 +1504,57 @@ def main():
     threading.Thread(target=lan_and_arp_guard_loop, daemon=True).start()
     threading.Thread(target=canary_honeypot_loop, daemon=True).start()
     threading.Thread(target=input_reader_loop, daemon=True).start()
+    threading.Thread(target=dns_resolver_worker, daemon=True).start()
 
     fb_fd = None
-    if os.path.exists(FB_DEV):
-        try:
-            fb_fd = os.open(FB_DEV, os.O_RDWR)
-        except Exception:
-            fb_fd = None
+    prev_vt_active = False
+    last_render_time = 0.0
+    MIN_FRAME_INTERVAL = 0.08  # Max ~12.5 FPS na ARM926EJ-S aby nie obciazac CPU
 
     while True:
         try:
-            if is_dashboard_vt_active() and fb_fd is not None:
+            if fb_fd is None and os.path.exists(FB_DEV):
+                try:
+                    fb_fd = os.open(FB_DEV, os.O_RDWR)
+                except Exception:
+                    fb_fd = None
+
+            vt_active = is_dashboard_vt_active()
+            # If user just switched back to dashboard VT (chvt 3 / soc), trigger immediate frame redraw
+            if vt_active and not prev_vt_active:
+                REDRAW_EVENT.set()
+            prev_vt_active = vt_active
+
+            if vt_active and fb_fd is not None:
+                now = time.time()
+                elapsed = now - last_render_time
+                if elapsed < MIN_FRAME_INTERVAL:
+                    time.sleep(MIN_FRAME_INTERVAL - elapsed)
+
                 img = render_frame(fonts)
+                written = -1
                 if C_BLITTER is not None:
-                    raw_rgb = img.tobytes()
-                    C_BLITTER(fb_fd, raw_rgb, FB_WIDTH * FB_HEIGHT)
-                else:
+                    try:
+                        raw_rgb = img.tobytes()
+                        written = C_BLITTER(fb_fd, raw_rgb, FB_WIDTH * FB_HEIGHT)
+                    except Exception as be:
+                        written = -1
+                if written < 0:
                     raw565 = image_to_rgb565_bytes(img)
-                    os.pwrite(fb_fd, raw565, 0)
-        except Exception:
-            pass
+                    try:
+                        os.pwrite(fb_fd, raw565, 0)
+                    except Exception:
+                        os.lseek(fb_fd, 0, os.SEEK_SET)
+                        os.write(fb_fd, raw565)
+
+                last_render_time = time.time()
+        except Exception as e:
+            try:
+                with open("/run/wm8650_dashboard_err.log", "a") as ef:
+                    ef.write(f"Frame render error: {e}\n")
+            except Exception:
+                pass
+
         REDRAW_EVENT.wait(timeout=0.35)
         REDRAW_EVENT.clear()
 
