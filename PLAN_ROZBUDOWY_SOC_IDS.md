@@ -467,3 +467,43 @@ Model AI przejmujący zadanie na komputerze developerskim powinien wykonać kole
 
 ### Krok 6: Weryfikacja kompilacji
 1. Przetestuj kompilację krzyżową `make -C tools` oraz sprawdź składnię Pythona `python3 -m py_compile soc_dashboard/wm8650_soc_dashboard.py` i skryptów powłoki `bash -n install_debian12_bookworm.sh`.
+
+---
+
+## 8. Spostrzeżenia z Testów Fizycznych (2026-11-12) i Plan Dalszej Optymalizacji
+
+Podczas fizycznych testów na działającym tablecie (`puzhi_7inch_vt1609_ts`, `192.168.9.34`) odnotowano następujące kluczowe spostrzeżenia i wnioski architektoniczne:
+
+1. **Ekran dotykowy (VT1609 przez SPI0):**
+   * Dotyk oporowy nie reaguje na nacisk. Podłączenie klawiatury/myszki USB nie blokuje dotyku fizycznego (działają one na niezależnych szynach USB vs SPI0).
+   * Przyczyna leży w bezpośrednim odczycie rejestrów `VT1609` przez `SPI0` w userspace w jądrze 6.1 (brak odpowiedzi SPI lub wymagana weryfikacja zegarów PMC / pinmuxu w jądrze mainline). Do zbadania w dedykowanej sesji sprzętowej.
+
+2. **Obsługa myszki i opóźnienia kursora:**
+   * Mysz USB działa (po wdrożeniu obsługi `evdev` na `/dev/input/event*`), lecz kursor reaguje z zauważalnym opóźnieniem.
+   * Procesor ARM926EJ-S (600 MHz, brak akceleratora 2D/GPU) musi programowo renderować pełną klatkę 800×480 (384 000 pikseli) w bibliotece Pillow przy każdym zdarzeniu ruchu myszy, co powoduje skoki CPU do 80% i lag wizualny.
+
+3. **Przebudowa Karty `[1] PRZEGLĄD` (Usunięcie ciągłego wykresu):**
+   * Rysowanie dynamicznego, ciągłego wykresu opóźnień sieciowych niepotrzebnie obciąża procesor.
+   * **Decyzja:** Zastąpienie wykresu prostymi, czytelnymi metrykami statycznymi/tekstowymi:
+     * Minimalne opóźnienie (`min`),
+     * Maksymalne opóźnienie (`max`),
+     * Średnie opóźnienie (`avg`),
+     * Ostatnie opóźnienie (`last`).
+   * Zapewni to natychmiastową czytelność parametrów sieci i radykalny spadek zużycia CPU w pętli renderowania.
+
+4. **Analiza architektury: Tryb Tekstowy (TUI) vs Tryb Graficzny (Framebuffer):**
+   * Obecny tryb graficzny w Pythonie (Pillow + blitter) utrzymuje bazowe obciążenie CPU rzędu ~50-60% (do 80% przy ruchu myszką).
+   * **Kierunek badawczy 1 — Natywny TUI w konsoli tekstowej (`ncurses` / ANSI na `tty3`):**
+     * Linuksowa konsola tekstowa `fbcon` renderuje znaki sprzętowo w jądrze.
+     * Wykorzystanie biblioteki `ncurses` (w C lub lekkim Pythonie) z obsługą kolorów, ramek i zakładek pozwoli zrealizować dokładnie tę samą funkcjonalność (5 zakładek, tabela hostów, alerty, inspekcja hostów), redukując obciążenie CPU do **< 2-3%**.
+     * Obsługa myszy w trybie tekstowym jest w pełni wspierana przez demona `gpm` (General Purpose Mouse) lub bezpośrednie czytanie `evdev`.
+   * **Kierunek badawczy 2 — Lżejszy tryb graficzny:**
+     * Natywna aplikacja w C z mechanizmem "dirty rectangles" (przerysowywanie wyłącznie obszaru kursora ~16×16 px zamiast całego ekranu 800×480).
+
+5. **Zasada działania opcji `[5] TERMINAL >_`:**
+   * Przełączenie na terminal (`chvt 1`) **NIE kończy ani nie przerywa działania demona SOC/IDS**.
+   * Wszystkie wątki ochrony sieciowej (strażnik ARP, wykrywanie nowych hostów, Honeypot TCP, monitoring łącza) pracują nieprzerwanie w tle.
+   * Przełączenie jedynie zwalnia dostęp do framebuffera, umożliwiając pracę w powłoce linuksowej.
+   * Powrót do ekranu monitora następuje w dowolnej chwili przez wywołanie komendy `soc` (lub `chvt 3`).
+   * W interfejsie warto zmienić etykietę na bardziej jednoznaczną: np. `[5] KONSOLA (W TLE)`.
+
