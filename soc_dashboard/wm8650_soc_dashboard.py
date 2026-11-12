@@ -17,6 +17,7 @@ Features:
 import collections
 import ctypes
 import datetime
+import glob
 import json
 import os
 import re
@@ -937,6 +938,99 @@ def handle_click(x: int, y: int):
                 REDRAW_EVENT.set()
 
 
+def _handle_evdev_key(code: int):
+    # Standard Linux evdev keycodes:
+    # 2=1, 3=2, 4=3, 5=4, 6=5
+    # 1=ESC, 45=X, 28=ENTER, 57=SPACE, 30=A, 44=Z, 24=O, 31=S, 46=C, 50=M, 15=TAB
+    # 103=UP, 108=DOWN, 20=T, 37=K, 36=J
+    if code in (2, 3, 4, 5):
+        idx = code - 2
+        with STATE.lock:
+            STATE.active_tab = idx
+            STATE.selected_host_mac = None
+            STATE.unread_warn[idx] = 0
+            STATE.unread_alert[idx] = 0
+        trigger_beep("click")
+        REDRAW_EVENT.set()
+    elif code in (6, 20):  # 5 or T
+        switch_to_terminal()
+    elif code in (1, 45):  # ESC or X
+        with STATE.lock:
+            if STATE.selected_host_mac is not None:
+                STATE.selected_host_mac = None
+                REDRAW_EVENT.set()
+                trigger_beep("click")
+                return
+        if code == 1:
+            switch_to_terminal()
+    elif code in (103, 37):  # UP or K
+        with STATE.lock:
+            STATE.selected_host_index = max(0, STATE.selected_host_index - 1)
+        trigger_beep("click")
+        REDRAW_EVENT.set()
+    elif code in (108, 36):  # DOWN or J
+        with STATE.lock:
+            total_h = len(STATE.lan_hosts)
+            STATE.selected_host_index = min(max(0, total_h - 1), STATE.selected_host_index + 1)
+        trigger_beep("click")
+        REDRAW_EVENT.set()
+    elif code in (28, 57):  # ENTER or SPACE
+        with STATE.lock:
+            sel_m = STATE.selected_host_mac
+            cur_tab = STATE.active_tab
+        if cur_tab == 1:
+            if sel_m is not None:
+                toggle_host_known(sel_m)
+            else:
+                with STATE.lock:
+                    hosts_s = sorted(
+                        STATE.lan_hosts.values(),
+                        key=lambda h: (h["known"], h["ip"]),
+                    )
+                    s_idx = STATE.selected_host_index
+                    if 0 <= s_idx < len(hosts_s):
+                        STATE.selected_host_mac = hosts_s[s_idx]["mac"]
+                        REDRAW_EVENT.set()
+                        trigger_beep("click")
+    elif code in (44, 24):  # Z or O
+        with STATE.lock:
+            sel_m = STATE.selected_host_mac
+            if sel_m is None and STATE.lan_hosts:
+                hosts_s = sorted(
+                    STATE.lan_hosts.values(),
+                    key=lambda h: (h["known"], h["ip"]),
+                )
+                s_idx = STATE.selected_host_index
+                if 0 <= s_idx < len(hosts_s):
+                    sel_m = hosts_s[s_idx]["mac"]
+        if sel_m:
+            toggle_host_known(sel_m)
+    elif code == 30:  # A
+        approve_all_current_hosts()
+    elif code == 31:  # S
+        with STATE.lock:
+            STATE.force_subnet_sweep = True
+        trigger_beep("click")
+        REDRAW_EVENT.set()
+    elif code == 46:  # C
+        acknowledge_all_alarms()
+        REDRAW_EVENT.set()
+    elif code == 50:  # M
+        with STATE.lock:
+            STATE.sound_muted = not STATE.sound_muted
+        trigger_beep("click")
+        REDRAW_EVENT.set()
+    elif code == 15:  # TAB
+        with STATE.lock:
+            STATE.active_tab = (STATE.active_tab + 1) % 4
+            STATE.selected_host_mac = None
+            idx = STATE.active_tab
+            STATE.unread_warn[idx] = 0
+            STATE.unread_alert[idx] = 0
+        trigger_beep("click")
+        REDRAW_EVENT.set()
+
+
 def input_reader_loop():
     # 1. UDP socket for VT1609 touchscreen daemon (127.0.0.1:9999)
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -947,7 +1041,7 @@ def input_reader_loop():
     except Exception:
         pass
 
-    # 2. Optional USB mouse (/dev/input/mice)
+    # 2. Legacy mouse device (/dev/input/mice) if present
     mouse_fd = None
     if os.path.exists("/dev/input/mice"):
         try:
@@ -955,7 +1049,7 @@ def input_reader_loop():
         except Exception:
             mouse_fd = None
 
-    # 3. Optional keyboard on /dev/tty3
+    # 3. Virtual terminal keyboard on /dev/tty3
     tty_fd = None
     old_term = None
     if os.path.exists("/dev/tty3"):
@@ -966,13 +1060,38 @@ def input_reader_loop():
         except Exception:
             tty_fd = None
 
+    # 4. Modern Linux evdev devices (/dev/input/event*) for USB/wireless mice, keyboards, touchscreens
+    evdev_fds = {}  # path -> fd
+    last_evdev_scan = 0.0
+    EV_FORMAT = "llHHi"
+    EV_SIZE = struct.calcsize(EV_FORMAT)
+
     try:
         while True:
+            now = time.time()
+            if now - last_evdev_scan >= 3.0:
+                last_evdev_scan = now
+                current_devs = set(glob.glob("/dev/input/event*"))
+                for path in list(evdev_fds.keys()):
+                    if path not in current_devs:
+                        try:
+                            os.close(evdev_fds[path])
+                        except Exception:
+                            pass
+                        del evdev_fds[path]
+                for path in current_devs:
+                    if path not in evdev_fds:
+                        try:
+                            evdev_fds[path] = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+                        except Exception:
+                            pass
+
             rlist = [udp_sock]
             if mouse_fd is not None:
                 rlist.append(mouse_fd)
             if tty_fd is not None:
                 rlist.append(tty_fd)
+            rlist.extend(evdev_fds.values())
 
             readable, _, _ = select.select(rlist, [], [], 0.2)
             for r in readable:
@@ -1010,6 +1129,64 @@ def input_reader_loop():
                                 REDRAW_EVENT.set()
                     except Exception:
                         pass
+
+                elif r in evdev_fds.values():
+                    try:
+                        buf = os.read(r, EV_SIZE * 16)
+                        for offset in range(0, len(buf) - EV_SIZE + 1, EV_SIZE):
+                            _, _, ev_type, ev_code, ev_val = struct.unpack(EV_FORMAT, buf[offset : offset + EV_SIZE])
+                            if ev_type == 2:  # EV_REL (Mouse relative movement & wheel)
+                                if ev_code == 0:  # REL_X
+                                    with STATE.lock:
+                                        STATE.cursor_x = max(0, min(799, STATE.cursor_x + ev_val))
+                                        STATE.show_cursor = True
+                                    REDRAW_EVENT.set()
+                                elif ev_code == 1:  # REL_Y
+                                    with STATE.lock:
+                                        STATE.cursor_y = max(0, min(479, STATE.cursor_y + ev_val))
+                                        STATE.show_cursor = True
+                                    REDRAW_EVENT.set()
+                                elif ev_code == 8:  # REL_WHEEL
+                                    with STATE.lock:
+                                        if ev_val > 0:
+                                            STATE.selected_host_index = max(0, STATE.selected_host_index - 1)
+                                        elif ev_val < 0:
+                                            total_h = len(STATE.lan_hosts)
+                                            STATE.selected_host_index = min(max(0, total_h - 1), STATE.selected_host_index + 1)
+                                    trigger_beep("click")
+                                    REDRAW_EVENT.set()
+                            elif ev_type == 1:  # EV_KEY (Buttons & Keys)
+                                if ev_code in (272, 330):  # BTN_LEFT or BTN_TOUCH
+                                    if ev_val == 1:  # Pressed
+                                        with STATE.lock:
+                                            cx, cy = STATE.cursor_x, STATE.cursor_y
+                                        handle_click(cx, cy)
+                                elif ev_code == 273:  # BTN_RIGHT
+                                    if ev_val == 1:
+                                        with STATE.lock:
+                                            if STATE.selected_host_mac is not None:
+                                                STATE.selected_host_mac = None
+                                                trigger_beep("click")
+                                                REDRAW_EVENT.set()
+                                elif ev_val == 1:  # Keyboard key pressed
+                                    _handle_evdev_key(ev_code)
+                            elif ev_type == 3:  # EV_ABS (Absolute touchscreen coords)
+                                if ev_code == 0:  # ABS_X
+                                    with STATE.lock:
+                                        STATE.cursor_x = max(0, min(799, ev_val))
+                                        STATE.show_cursor = True
+                                elif ev_code == 1:  # ABS_Y
+                                    with STATE.lock:
+                                        STATE.cursor_y = max(0, min(479, ev_val))
+                                        STATE.show_cursor = True
+                    except (OSError, IOError):
+                        for p, f in list(evdev_fds.items()):
+                            if f == r:
+                                try:
+                                    os.close(f)
+                                except Exception:
+                                    pass
+                                del evdev_fds[p]
 
                 elif r == tty_fd:
                     try:
@@ -1116,6 +1293,11 @@ def input_reader_loop():
         if tty_fd is not None and old_term is not None:
             try:
                 termios.tcsetattr(tty_fd, termios.TCSADRAIN, old_term)
+            except Exception:
+                pass
+        for f in list(evdev_fds.values()):
+            try:
+                os.close(f)
             except Exception:
                 pass
 
@@ -1582,7 +1764,7 @@ def main():
             except Exception:
                 pass
 
-        REDRAW_EVENT.wait(timeout=0.35)
+        REDRAW_EVENT.wait(timeout=0.75)
         REDRAW_EVENT.clear()
 
 
