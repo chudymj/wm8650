@@ -677,6 +677,7 @@ def lan_and_arp_guard_loop():
     load_known_hosts()
     last_sweep = 0.0
     first_run = True
+    last_arp_alert_msg = None
 
     while True:
         try:
@@ -755,9 +756,16 @@ def lan_and_arp_guard_loop():
                 if arp_spoof_msg:
                     STATE.arp_spoof_detected = True
                     STATE.arp_spoof_detail = arp_spoof_msg
+                else:
+                    STATE.arp_spoof_detected = False
+                    STATE.arp_spoof_detail = "OK (MAC bramy stabilny)"
+                    STATE.arp_spoof_detail_l1 = "OK (Brama zweryfikowana)"
+                    STATE.arp_spoof_detail_l2 = "Brak kolizji i duplikatow MAC"
 
-            if arp_spoof_msg:
-                add_security_event("ALERT", "ARP-GUARD", arp_spoof_msg, target_tabs=(2, 3))
+            if arp_spoof_msg != last_arp_alert_msg:
+                if arp_spoof_msg:
+                    add_security_event("ALERT", "ARP-GUARD", arp_spoof_msg, target_tabs=(2, 3))
+                last_arp_alert_msg = arp_spoof_msg
 
             for ip_addr, mac in new_hosts_found:
                 add_security_event(
