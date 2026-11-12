@@ -17,6 +17,8 @@ zImage*
 *.ko
 *.so
 tools/wm8650_wifi_on
+tools/wm8650_beep
+tools/wm8650_touchd
 
 # Pliki tymczasowe, edytory i wrażliwe
 *.swp

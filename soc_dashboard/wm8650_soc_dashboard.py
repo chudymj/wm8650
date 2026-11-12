@@ -15,6 +15,7 @@ Features:
 """
 
 import collections
+import ctypes
 import datetime
 import json
 import os
@@ -38,6 +39,205 @@ DASHBOARD_TTY = "tty3"
 KNOWN_HOSTS_FILE = "/etc/wm8650-soc/known_hosts.json"
 BATTERY_FILE = "/run/wm8650_battery.txt"
 BEEP_BIN = "/usr/local/bin/wm8650-beep"
+
+# Fast C Framebuffer Blitter (libwm8650_rgb565.so) - ARM926EJ-S L1 cache optimized
+C_BLITTER = None
+for _lib_path in (
+    "/usr/local/lib/libwm8650_rgb565.so",
+    os.path.join(os.path.dirname(__file__), "../tools/libwm8650_rgb565.so"),
+    os.path.join(os.path.dirname(__file__), "libwm8650_rgb565.so"),
+    "/tmp/libwm8650_rgb565.so",
+):
+    if os.path.exists(_lib_path):
+        try:
+            _cdll = ctypes.CDLL(_lib_path)
+            _cdll.fb_write_rgb888.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
+            _cdll.fb_write_rgb888.restype = ctypes.c_int
+            C_BLITTER = _cdll.fb_write_rgb888
+            break
+        except Exception:
+            pass
+
+REDRAW_EVENT = threading.Event()
+
+# Lightweight OUI Database for popular LAN / SmartHome / Mobile devices
+OUI_DATABASE = {
+    "b8:27:eb": "Raspberry Pi",
+    "dc:a6:32": "Raspberry Pi",
+    "e4:5f:01": "Raspberry Pi",
+    "28:cd:c1": "Raspberry Pi",
+    "d8:3a:dd": "Raspberry Pi",
+    "18:fe:34": "Espressif (IoT)",
+    "24:0a:c4": "Espressif (IoT)",
+    "30:ae:a4": "Espressif (IoT)",
+    "3c:61:05": "Espressif (IoT)",
+    "3c:71:bf": "Espressif (IoT)",
+    "4c:75:25": "Espressif (IoT)",
+    "5c:cf:7f": "Espressif (IoT)",
+    "60:01:94": "Espressif (IoT)",
+    "68:c6:3a": "Espressif (IoT)",
+    "84:0d:8e": "Espressif (IoT)",
+    "84:f3:eb": "Espressif (IoT)",
+    "a4:cf:12": "Espressif (IoT)",
+    "ac:67:b2": "Espressif (IoT)",
+    "b4:e6:2d": "Espressif (IoT)",
+    "bc:dd:c2": "Espressif (IoT)",
+    "cc:50:e3": "Espressif (IoT)",
+    "d8:bc:38": "Espressif (IoT)",
+    "dc:4f:22": "Espressif (IoT)",
+    "e0:98:06": "Espressif (IoT)",
+    "e8:31:cd": "Espressif (IoT)",
+    "ec:fa:bc": "Espressif (IoT)",
+    "f0:08:d1": "Tuya Smart",
+    "10:5a:17": "Tuya Smart",
+    "70:89:76": "Tuya Smart",
+    "d8:1f:12": "Tuya Smart",
+    "00:03:93": "Apple",
+    "00:05:02": "Apple",
+    "00:0a:27": "Apple",
+    "00:0a:95": "Apple",
+    "00:0d:93": "Apple",
+    "00:10:fa": "Apple",
+    "00:11:24": "Apple",
+    "00:14:51": "Apple",
+    "00:17:f2": "Apple",
+    "00:19:e3": "Apple",
+    "00:1b:63": "Apple",
+    "00:1c:b3": "Apple",
+    "00:1d:4f": "Apple",
+    "00:1e:52": "Apple",
+    "00:1e:c2": "Apple",
+    "00:21:e9": "Apple",
+    "00:22:41": "Apple",
+    "00:23:12": "Apple",
+    "00:23:32": "Apple",
+    "00:23:6c": "Apple",
+    "00:24:36": "Apple",
+    "00:25:00": "Apple",
+    "00:25:4b": "Apple",
+    "00:25:bc": "Apple",
+    "00:26:08": "Apple",
+    "00:26:4a": "Apple",
+    "00:26:b0": "Apple",
+    "00:26:bb": "Apple",
+    "14:7d:da": "Apple",
+    "38:f9:d3": "Apple",
+    "8c:85:90": "Apple",
+    "a4:83:e7": "Apple",
+    "ac:bc:32": "Apple",
+    "bc:fe:d9": "Apple",
+    "f0:18:98": "Apple",
+    "f4:f1:5a": "Apple",
+    "00:07:ab": "Samsung",
+    "00:12:fb": "Samsung",
+    "00:15:99": "Samsung",
+    "00:16:32": "Samsung",
+    "00:17:c8": "Samsung",
+    "00:1a:8a": "Samsung",
+    "00:1d:25": "Samsung",
+    "00:21:19": "Samsung",
+    "00:23:39": "Samsung",
+    "00:23:d7": "Samsung",
+    "00:24:54": "Samsung",
+    "00:26:37": "Samsung",
+    "08:08:c2": "Samsung",
+    "14:49:e0": "Samsung",
+    "28:18:78": "Samsung",
+    "34:c3:ac": "Samsung",
+    "50:85:69": "Samsung",
+    "78:47:1d": "Samsung",
+    "94:65:2d": "Samsung",
+    "a8:06:00": "Samsung",
+    "cc:07:ab": "Samsung",
+    "d0:22:be": "Samsung",
+    "00:1d:0f": "TP-Link",
+    "00:21:27": "TP-Link",
+    "00:23:cd": "TP-Link",
+    "00:25:86": "TP-Link",
+    "14:cc:20": "TP-Link",
+    "1c:3b:f3": "TP-Link",
+    "30:b5:c2": "TP-Link",
+    "50:c7:bf": "TP-Link",
+    "60:e3:27": "TP-Link",
+    "64:70:02": "TP-Link",
+    "70:4f:57": "TP-Link",
+    "74:ea:3a": "TP-Link",
+    "84:16:f9": "TP-Link",
+    "90:f6:52": "TP-Link",
+    "a0:f3:c1": "TP-Link",
+    "c0:4a:00": "TP-Link",
+    "d8:07:b6": "TP-Link",
+    "ec:08:6b": "TP-Link",
+    "00:9e:c8": "Xiaomi",
+    "14:f6:5a": "Xiaomi",
+    "28:6c:07": "Xiaomi",
+    "34:80:62": "Xiaomi",
+    "58:44:98": "Xiaomi",
+    "64:09:80": "Xiaomi",
+    "74:51:ba": "Xiaomi",
+    "7c:49:eb": "Xiaomi",
+    "88:c3:97": "Xiaomi",
+    "ac:c1:ee": "Xiaomi",
+    "d4:97:0b": "Xiaomi",
+    "00:02:b3": "Intel",
+    "00:03:47": "Intel",
+    "00:04:23": "Intel",
+    "00:0e:0c": "Intel",
+    "00:13:02": "Intel",
+    "00:15:00": "Intel",
+    "00:16:76": "Intel",
+    "00:19:d1": "Intel",
+    "00:1b:21": "Intel",
+    "00:1c:c0": "Intel",
+    "00:1e:67": "Intel",
+    "00:21:6a": "Intel",
+    "00:23:14": "Intel",
+    "00:24:d7": "Intel",
+    "08:11:96": "Intel",
+    "34:13:e8": "Intel",
+    "68:05:ca": "Intel",
+    "a4:4c:c8": "Intel",
+    "00:0c:42": "MikroTik",
+    "2c:c8:1b": "MikroTik",
+    "48:8f:5a": "MikroTik",
+    "64:d1:54": "MikroTik",
+    "b8:69:f4": "MikroTik",
+    "c4:ad:34": "MikroTik",
+    "cc:2d:e0": "MikroTik",
+    "d4:01:c3": "MikroTik",
+    "e4:8d:8c": "MikroTik",
+    "00:18:82": "Huawei",
+    "00:1e:10": "Huawei",
+    "00:25:68": "Huawei",
+    "00:46:4b": "Huawei",
+    "0c:37:dc": "Huawei",
+    "20:0b:c7": "Huawei",
+    "24:df:6a": "Huawei",
+    "48:46:fb": "Huawei",
+    "70:72:3c": "Huawei",
+    "00:1a:11": "Google",
+    "1c:56:fe": "Google",
+    "20:df:b9": "Google",
+    "3c:5a:37": "Google",
+    "54:60:09": "Google",
+    "94:eb:2c": "Google",
+    "a4:77:33": "Google",
+    "e4:f0:42": "Google",
+    "00:04:1f": "Sony",
+    "00:13:15": "Sony",
+    "00:15:c1": "Sony",
+    "00:19:c5": "Sony",
+    "00:24:8d": "Sony",
+    "00:d9:d1": "Sony",
+    "04:76:6e": "Sony",
+    "70:9e:29": "Sony",
+    "a8:e3:ee": "Sony",
+    "00:07:0e": "Realtek",
+    "00:e0:4c": "Realtek",
+    "52:54:4c": "Realtek",
+    "00:40:63": "WonderMedia",
+    "00:02:55": "VIA Technologies",
+}
 
 CANARY_PORTS = [
     (21, "FTP"),
@@ -88,15 +288,20 @@ class SharedState:
         self.bat_pct = 90
         self.uptime_str = "0h 00m"
 
-        # LAN Hosts: dict of mac -> {"ip": str, "mac": str, "known": bool, "last_seen": str}
+        # LAN Hosts: dict of mac -> {"ip": str, "mac": str, "known": bool, "last_seen": str, "vendor": str}
         self.lan_hosts = {}
         self.known_macs = set()
+        self.host_names = {}
+        self.selected_host_mac = None
+        self.selected_host_index = 0
         self.last_arp_scan = "---"
         self.force_subnet_sweep = False
 
         # IDS status
         self.arp_spoof_detected = False
         self.arp_spoof_detail = "OK (MAC bramy stabilny)"
+        self.arp_spoof_detail_l1 = "OK (Brama zweryfikowana)"
+        self.arp_spoof_detail_l2 = "Brak kolizji i duplikatow MAC"
         self.evil_twin_detected = False
         self.evil_twin_detail = "OK (BSSID punktu dostepowego zgodny)"
         self.canary_stats = {
@@ -105,7 +310,7 @@ class SharedState:
         }
 
         # Security event log: list of dicts {"time", "level", "source", "msg"}
-        self.event_log = collections.deque(maxlen=40)
+        self.event_log = collections.deque(maxlen=50)
 
         # Pointer / Touch feedback
         self.cursor_x = 400
@@ -114,6 +319,30 @@ class SharedState:
 
 
 STATE = SharedState()
+
+
+def lookup_device_info(mac: str, ip: str) -> str:
+    mac_lower = mac.lower()
+    with STATE.lock:
+        gw_ip = STATE.gateway_ip
+        loc_ip = STATE.local_ip
+        hostname = STATE.host_names.get(ip, "")
+
+    if ip == gw_ip and gw_ip != "---":
+        return f"Router/Brama ({hostname})" if hostname else "Router domowy (Brama)"
+    if ip == loc_ip and loc_ip != "---":
+        return "WM8650 SOC (Ten tablet)"
+
+    prefix = mac_lower[:8]
+    vendor = OUI_DATABASE.get(prefix)
+    if vendor:
+        if hostname:
+            return f"{vendor} ({hostname[:12]})"
+        return vendor
+
+    if hostname:
+        return f"Host: {hostname[:16]}"
+    return "Urzadzenie LAN"
 
 
 def trigger_beep(mode: str):
@@ -182,6 +411,43 @@ def approve_all_current_hosts():
     save_known_hosts()
     add_security_event("INFO", "LAN", "Zatwierdzono wszystkie widoczne hosty LAN jako ZNANE", ())
     trigger_beep("click")
+    REDRAW_EVENT.set()
+
+
+def toggle_host_known(mac: str):
+    if not mac:
+        return
+    mac_lower = mac.lower()
+    with STATE.lock:
+        if mac_lower in STATE.known_macs:
+            STATE.known_macs.discard(mac_lower)
+            if mac_lower in STATE.lan_hosts:
+                STATE.lan_hosts[mac_lower]["known"] = False
+            ev_msg = f"Oznaczono urzadzenie {mac} jako NIEZNANE"
+        else:
+            STATE.known_macs.add(mac_lower)
+            if mac_lower in STATE.lan_hosts:
+                STATE.lan_hosts[mac_lower]["known"] = True
+            ev_msg = f"Zatwierdzono urzadzenie {mac} jako ZNANE"
+    save_known_hosts()
+    add_security_event("INFO", "LAN", ev_msg, ())
+    trigger_beep("click")
+    REDRAW_EVENT.set()
+
+
+def resolve_hostname_async(ip: str):
+    def _worker():
+        try:
+            name, _, _ = socket.gethostbyaddr(ip)
+            if name:
+                short = name.split(".")[0]
+                with STATE.lock:
+                    STATE.host_names[ip] = short
+                REDRAW_EVENT.set()
+        except Exception:
+            pass
+
+    threading.Thread(target=_worker, daemon=True).start()
 
 
 def acknowledge_all_alarms():
@@ -437,8 +703,15 @@ def lan_and_arp_guard_loop():
 
                 mac_to_ip = {}
                 for ip_addr, mac, _ in arp_entries:
+                    if ip_addr not in STATE.host_names:
+                        resolve_hostname_async(ip_addr)
+
                     if mac in mac_to_ip and mac_to_ip[mac] != ip_addr:
-                        arp_spoof_msg = f"Duplikat MAC {mac} dla {mac_to_ip[mac]} oraz {ip_addr}!"
+                        ip1 = mac_to_ip[mac]
+                        ip2 = ip_addr
+                        arp_spoof_msg = f"Duplikat MAC {mac} na IP {ip1} oraz {ip2}"
+                        STATE.arp_spoof_detail_l1 = f"Duplikat MAC: {mac}"
+                        STATE.arp_spoof_detail_l2 = f"IP: {ip1} oraz {ip2}"
                     mac_to_ip[mac] = ip_addr
 
                     if ip_addr == gw_ip:
@@ -447,18 +720,22 @@ def lan_and_arp_guard_loop():
                             STATE.baseline_gateway_mac = mac
                         elif mac != STATE.baseline_gateway_mac:
                             arp_spoof_msg = (
-                                f"Zmiana MAC bramy {gw_ip}! Byl: {STATE.baseline_gateway_mac}, jest: {mac}"
+                                f"Zmiana MAC bramy {gw_ip}! Poprzedni: {STATE.baseline_gateway_mac}, nowy: {mac}"
                             )
+                            STATE.arp_spoof_detail_l1 = f"Zmiana MAC bramy {gw_ip}!"
+                            STATE.arp_spoof_detail_l2 = f"Byl: {STATE.baseline_gateway_mac} -> {mac}"
 
                     is_known = mac in STATE.known_macs
                     prev = STATE.lan_hosts.get(mac)
                     if prev is None and not is_known:
                         new_hosts_found.append((ip_addr, mac))
+                    vendor_str = lookup_device_info(mac, ip_addr)
                     STATE.lan_hosts[mac] = {
                         "ip": ip_addr,
                         "mac": mac,
                         "known": is_known,
                         "last_seen": now_hm,
+                        "vendor": vendor_str,
                     }
 
                 STATE.last_arp_scan = now_hm
@@ -550,6 +827,26 @@ def handle_click(x: int, y: int):
                 pass
         return
 
+    # Check if Device Detail Modal is open
+    with STATE.lock:
+        sel_mac = STATE.selected_host_mac
+        tab = STATE.active_tab
+
+    if sel_mac is not None:
+        # Modal Box coordinates: [120, 75, 680, 420]
+        # Toggle button: [140, 355, 385, 405]
+        # Close button: [440, 355, 660, 405]
+        if 350 <= y <= 410 and 140 <= x <= 390:
+            toggle_host_known(sel_mac)
+            return
+        elif (350 <= y <= 410 and 430 <= x <= 670) or not (120 <= x <= 680 and 75 <= y <= 420):
+            with STATE.lock:
+                STATE.selected_host_mac = None
+            trigger_beep("click")
+            REDRAW_EVENT.set()
+            return
+        return
+
     # Top navigation bar (height 56 px, 5 tabs x 160 px)
     if y < 56:
         tab_idx = min(4, max(0, x // 160))
@@ -558,24 +855,40 @@ def handle_click(x: int, y: int):
             return
         with STATE.lock:
             STATE.active_tab = tab_idx
+            STATE.selected_host_mac = None
             STATE.unread_warn[tab_idx] = 0
             STATE.unread_alert[tab_idx] = 0
         trigger_beep("click")
+        REDRAW_EVENT.set()
         return
 
-    with STATE.lock:
-        tab = STATE.active_tab
+    # Tab 2 (LAN Hosts): Row clicks to inspect device
+    if tab == 1:
+        if 140 <= y < 410:
+            row_idx = (y - 140) // 27
+            with STATE.lock:
+                hosts_sorted = sorted(
+                    STATE.lan_hosts.values(),
+                    key=lambda h: (h["known"], h["ip"]),
+                )
+                if 0 <= row_idx < len(hosts_sorted):
+                    STATE.selected_host_mac = hosts_sorted[row_idx]["mac"]
+                    STATE.selected_host_index = row_idx
+                    trigger_beep("click")
+                    REDRAW_EVENT.set()
+                    return
 
     # Bottom action bar buttons (y >= 418)
     if y >= 418:
         if tab == 1:
-            if x < 440:
+            if x < 400:
                 approve_all_current_hosts()
             else:
                 with STATE.lock:
                     STATE.force_subnet_sweep = True
                 add_security_event("INFO", "LAN", "Wymuszono skanowanie podsieci LAN", ())
                 trigger_beep("click")
+                REDRAW_EVENT.set()
         elif tab in (2, 3):
             if x < 480:
                 acknowledge_all_alarms()
@@ -583,6 +896,7 @@ def handle_click(x: int, y: int):
                 with STATE.lock:
                     STATE.sound_muted = not STATE.sound_muted
                 trigger_beep("click")
+                REDRAW_EVENT.set()
 
 
 def input_reader_loop():
@@ -654,43 +968,109 @@ def input_reader_loop():
                                 cx, cy = STATE.cursor_x, STATE.cursor_y
                             if btns & 0x01:
                                 handle_click(cx, cy)
+                            else:
+                                REDRAW_EVENT.set()
                     except Exception:
                         pass
 
                 elif r == tty_fd:
                     try:
-                        ch = os.read(tty_fd, 8).decode("ascii", errors="ignore")
-                        if not ch:
+                        seq = os.read(tty_fd, 16).decode("ascii", errors="ignore")
+                        if not seq:
                             continue
-                        c = ch[0]
+
+                        # Handle escape sequences (Arrows)
+                        if seq == "\x1b[A" or seq == "k" or seq == "K":  # Up arrow
+                            with STATE.lock:
+                                STATE.selected_host_index = max(0, STATE.selected_host_index - 1)
+                            trigger_beep("click")
+                            REDRAW_EVENT.set()
+                            continue
+                        elif seq == "\x1b[B" or seq == "j" or seq == "J":  # Down arrow
+                            with STATE.lock:
+                                total_h = len(STATE.lan_hosts)
+                                STATE.selected_host_index = min(max(0, total_h - 1), STATE.selected_host_index + 1)
+                            trigger_beep("click")
+                            REDRAW_EVENT.set()
+                            continue
+
+                        c = seq[0]
+                        if seq == "\x1b":  # ESC alone
+                            with STATE.lock:
+                                if STATE.selected_host_mac is not None:
+                                    STATE.selected_host_mac = None
+                                    REDRAW_EVENT.set()
+                                    trigger_beep("click")
+                                    continue
+                            switch_to_terminal()
+                            continue
+
                         if c in ("1", "2", "3", "4"):
                             idx = int(c) - 1
                             with STATE.lock:
                                 STATE.active_tab = idx
+                                STATE.selected_host_mac = None
                                 STATE.unread_warn[idx] = 0
                                 STATE.unread_alert[idx] = 0
                             trigger_beep("click")
-                        elif c in ("5", "t", "T") or ch == "\x1b":
+                            REDRAW_EVENT.set()
+                        elif c in ("5", "t", "T"):
                             switch_to_terminal()
+                        elif c in ("\r", "\n", " "):  # Enter or Space
+                            with STATE.lock:
+                                sel_m = STATE.selected_host_mac
+                                cur_tab = STATE.active_tab
+                            if cur_tab == 1:
+                                if sel_m is not None:
+                                    toggle_host_known(sel_m)
+                                else:
+                                    with STATE.lock:
+                                        hosts_s = sorted(
+                                            STATE.lan_hosts.values(),
+                                            key=lambda h: (h["known"], h["ip"]),
+                                        )
+                                        s_idx = STATE.selected_host_index
+                                        if 0 <= s_idx < len(hosts_s):
+                                            STATE.selected_host_mac = hosts_s[s_idx]["mac"]
+                                            REDRAW_EVENT.set()
+                                            trigger_beep("click")
+                        elif c in ("z", "Z", "o", "O"):
+                            with STATE.lock:
+                                sel_m = STATE.selected_host_mac
+                                if sel_m is None and STATE.lan_hosts:
+                                    hosts_s = sorted(
+                                        STATE.lan_hosts.values(),
+                                        key=lambda h: (h["known"], h["ip"]),
+                                    )
+                                    s_idx = STATE.selected_host_index
+                                    if 0 <= s_idx < len(hosts_s):
+                                        sel_m = hosts_s[s_idx]["mac"]
+                            if sel_m:
+                                toggle_host_known(sel_m)
                         elif c in ("a", "A"):
                             approve_all_current_hosts()
                         elif c in ("s", "S"):
                             with STATE.lock:
                                 STATE.force_subnet_sweep = True
                             trigger_beep("click")
+                            REDRAW_EVENT.set()
                         elif c in ("c", "C"):
                             acknowledge_all_alarms()
+                            REDRAW_EVENT.set()
                         elif c in ("m", "M"):
                             with STATE.lock:
                                 STATE.sound_muted = not STATE.sound_muted
                             trigger_beep("click")
+                            REDRAW_EVENT.set()
                         elif c == "\t":
                             with STATE.lock:
                                 STATE.active_tab = (STATE.active_tab + 1) % 4
+                                STATE.selected_host_mac = None
                                 idx = STATE.active_tab
                                 STATE.unread_warn[idx] = 0
                                 STATE.unread_alert[idx] = 0
                             trigger_beep("click")
+                            REDRAW_EVENT.set()
                     except Exception:
                         pass
     finally:
@@ -805,66 +1185,70 @@ def render_frame(fonts) -> Image.Image:
             # ================= TAB 1: OVERVIEW =================
             if total_alerts > 0:
                 b_bg = (185, 28, 28) if flash else (127, 29, 29)
-                b_txt = "ALARM IDS! Wykryto skanowanie lub atak w sieci (Sprawdz zakladki 3 i 4)"
+                b_txt = "ALARM IDS! Wykryto atak lub skanowanie (Zakladki 3 i 4)"
             elif total_warns > 0 or STATE.packet_loss_pct > 15:
                 b_bg = (180, 83, 9)
-                b_txt = f"OSTRZEZENIE: Nowe hosty LAN ({new_hosts_count}) / Loss {STATE.packet_loss_pct}%"
+                b_txt = f"OSTRZEZENIE: Nowe hosty ({new_hosts_count}) / Loss {STATE.packet_loss_pct}%"
             else:
                 b_bg = (21, 128, 61)
-                b_txt = "STATUS SIECI: BEZPIECZNIE (Brak aktywnych zagrozen IDS)"
+                b_txt = "STATUS SIECI: BEZPIECZNIE (Brak zagrozen IDS)"
 
-            d.rectangle([12, 62, 788, 106], fill=b_bg, outline=(255, 255, 255), width=1)
-            d.text((24, 75), b_txt, fill=(255, 255, 255), font=f_md)
+            d.rectangle([12, 60, 788, 104], fill=b_bg, outline=(255, 255, 255), width=1)
+            # Use smaller font if text is long to prevent overflowing
+            if len(b_txt) > 42:
+                d.text((22, 75), b_txt, fill=(255, 255, 255), font=f_sm)
+            else:
+                d.text((22, 73), b_txt, fill=(255, 255, 255), font=f_md)
             now_clock = datetime.datetime.now().strftime("%H:%M:%S")
-            d.text((700, 75), now_clock, fill=(226, 232, 240), font=f_md)
+            d.text((700, 73), now_clock, fill=(226, 232, 240), font=f_md)
 
-            # 3 Info Cards (y = 114..206)
+            # 3 Info Cards (y = 112..204)
             # Card 1: Interface & Wi-Fi
-            d.rectangle([12, 114, 264, 206], fill=(17, 24, 39), outline=(51, 65, 85), width=1)
-            d.text((22, 120), f"INTERFEJS ({STATE.iface.upper()})", fill=(56, 189, 248), font=f_sm)
-            d.text((22, 140), f"IP: {STATE.local_ip}", fill=(255, 255, 255), font=f_md)
-            d.text((22, 164), f"SSID: {STATE.ssid}", fill=(203, 213, 225), font=f_sm)
+            d.rectangle([12, 112, 264, 204], fill=(17, 24, 39), outline=(51, 65, 85), width=1)
+            d.text((22, 118), f"INTERFEJS ({STATE.iface.upper()})", fill=(56, 189, 248), font=f_sm)
+            d.text((22, 138), f"IP: {STATE.local_ip}", fill=(255, 255, 255), font=f_md)
+            d.text((22, 162), f"SSID: {STATE.ssid[:18]}", fill=(203, 213, 225), font=f_sm)
             d.text(
-                (22, 182),
+                (22, 180),
                 f"Sygnal: {STATE.wifi_dbm} dBm ({STATE.wifi_pct}%)",
                 fill=(74, 222, 128) if STATE.wifi_pct >= 40 else (251, 191, 36),
                 font=f_sm,
             )
 
             # Card 2: Gateway & ARP Lock
-            d.rectangle([274, 114, 526, 206], fill=(17, 24, 39), outline=(51, 65, 85), width=1)
-            d.text((284, 120), "BRAMA DOMOWA (ROUTER)", fill=(56, 189, 248), font=f_sm)
+            d.rectangle([274, 112, 526, 204], fill=(17, 24, 39), outline=(51, 65, 85), width=1)
+            d.text((284, 118), "BRAMA DOMOWA (ROUTER)", fill=(56, 189, 248), font=f_sm)
             gw_ms_str = f"{STATE.ping_gw_ms:.1f} ms" if STATE.ping_gw_ms >= 0 else "TIMEOUT"
-            d.text((284, 140), f"{STATE.gateway_ip} ({gw_ms_str})", fill=(255, 255, 255), font=f_md)
-            d.text((284, 164), f"MAC: {STATE.gateway_mac}", fill=(203, 213, 225), font=f_sm)
+            d.text((284, 138), f"{STATE.gateway_ip} ({gw_ms_str})", fill=(255, 255, 255), font=f_md)
+            d.text((284, 162), f"MAC: {STATE.gateway_mac}", fill=(203, 213, 225), font=f_sm)
             arp_lbl = "ARP: LOCKED (OK)" if not STATE.arp_spoof_detected else "ARP: SPOOFING!"
             arp_col = (74, 222, 128) if not STATE.arp_spoof_detected else (248, 113, 113)
-            d.text((284, 182), arp_lbl, fill=arp_col, font=f_sm)
+            d.text((284, 180), arp_lbl, fill=arp_col, font=f_sm)
 
             # Card 3: Internet & Honeypot summary
-            d.rectangle([536, 114, 788, 206], fill=(17, 24, 39), outline=(51, 65, 85), width=1)
-            d.text((546, 120), "INTERNET & IDS CANARY", fill=(56, 189, 248), font=f_sm)
+            d.rectangle([536, 112, 788, 204], fill=(17, 24, 39), outline=(51, 65, 85), width=1)
+            d.text((546, 118), "INTERNET & IDS CANARY", fill=(56, 189, 248), font=f_sm)
             in_str = f"{STATE.ping_inet_ms:.1f} ms" if STATE.ping_inet_ms >= 0 else "TIMEOUT"
             dn_str = f"{STATE.ping_dns_ms:.1f} ms" if STATE.ping_dns_ms >= 0 else "TIMEOUT"
-            d.text((546, 140), f"1.1.1.1: {in_str}", fill=(255, 255, 255), font=f_md)
-            d.text((546, 164), f"8.8.8.8: {dn_str} | Loss: {STATE.packet_loss_pct}%", fill=(203, 213, 225), font=f_sm)
+            d.text((546, 138), f"1.1.1.1: {in_str}", fill=(255, 255, 255), font=f_md)
+            d.text((546, 162), f"8.8.8.8: {dn_str} | Loss: {STATE.packet_loss_pct}%", fill=(203, 213, 225), font=f_sm)
             total_hits = sum(s["hits"] for s in STATE.canary_stats.values())
             d.text(
-                (546, 182),
+                (546, 180),
                 f"Hosty LAN: {len(STATE.lan_hosts)} | Honeypot: {total_hits}",
                 fill=(74, 222, 128) if total_hits == 0 else (248, 113, 113),
                 font=f_sm,
             )
 
-            # Live Latency Chart (y = 214..396)
-            d.rectangle([12, 214, 788, 396], fill=(15, 23, 42), outline=(51, 65, 85), width=1)
+            # Live Latency Chart (y = 212..396)
+            d.rectangle([12, 212, 788, 396], fill=(15, 23, 42), outline=(51, 65, 85), width=1)
             d.text(
-                (22, 220),
-                "WYKRES OPOZNIEN NA ZYWO (60 probek: Zielony = Brama LAN, Cyjan = Internet 1.1.1.1, Czerwony = Timeout)",
+                (22, 218),
+                "WYKRES OPOZNIEN NA ZYWO: Zielony = Brama LAN, Cyjan = Internet 1.1.1.1",
                 fill=(148, 163, 184),
                 font=f_sm,
             )
-            chart_x0, chart_y0, chart_x1, chart_y1 = 24, 244, 776, 386
+            chart_x0, chart_y0, chart_x1, chart_y1 = 24, 240, 776, 386
             chart_h = chart_y1 - chart_y0
             for gy in (chart_y0 + chart_h // 4, chart_y0 + chart_h // 2, chart_y0 + 3 * chart_h // 4):
                 d.line([(chart_x0, gy), (chart_x1, gy)], fill=(30, 41, 59), width=1)
@@ -914,66 +1298,86 @@ def render_frame(fonts) -> Image.Image:
 
         elif active_tab == 1:
             # ================= TAB 2: LAN HOSTS =================
-            d.rectangle([12, 62, 788, 102], fill=(17, 24, 39), outline=(51, 65, 85), width=1)
+            d.rectangle([12, 60, 788, 100], fill=(17, 24, 39), outline=(51, 65, 85), width=1)
             d.text(
-                (24, 73),
-                f"WYKRYTE URZADZENIA W SIECI LAN: {len(STATE.lan_hosts)}  |  Nowe/Nieznane: {new_hosts_count}  |  Ostatni skan: {STATE.last_arp_scan}",
+                (22, 72),
+                f"HOSTY LAN: {len(STATE.lan_hosts)}  |  Nowe/Nieznane: {new_hosts_count}  |  Ostatni skan: {STATE.last_arp_scan}",
                 fill=(255, 255, 255),
-                font=f_md,
+                font=f_sm,
             )
+            d.text((585, 72), "[Dotknij wiersza by zbadac]", fill=(148, 163, 184), font=f_sm)
 
             # Table Header
-            d.rectangle([12, 110, 788, 138], fill=(30, 41, 59))
-            d.text((24, 116), "ADRES IP", fill=(56, 189, 248), font=f_sm)
-            d.text((195, 116), "ADRES MAC", fill=(56, 189, 248), font=f_sm)
-            d.text((400, 116), "OSTATNIO WIDZIANY", fill=(56, 189, 248), font=f_sm)
-            d.text((590, 116), "STATUS AUTORYZACJI", fill=(56, 189, 248), font=f_sm)
+            d.rectangle([12, 106, 788, 134], fill=(30, 41, 59))
+            d.text((22, 112), "ADRES IP", fill=(56, 189, 248), font=f_sm)
+            d.text((160, 112), "PRODUCENT / URZADZENIE", fill=(56, 189, 248), font=f_sm)
+            d.text((395, 112), "ADRES MAC", fill=(56, 189, 248), font=f_sm)
+            d.text((575, 112), "STATUS / DETEKCJA", fill=(56, 189, 248), font=f_sm)
 
             hosts_sorted = sorted(
                 STATE.lan_hosts.values(),
                 key=lambda h: (h["known"], h["ip"]),
             )
-            y_row = 144
-            for h in hosts_sorted[:10]:
-                row_bg = (69, 26, 3) if not h["known"] else (15, 23, 42)
-                d.rectangle([12, y_row, 788, y_row + 25], fill=row_bg)
-                d.text((24, y_row + 4), h["ip"], fill=(255, 255, 255), font=f_sm)
-                d.text((195, y_row + 4), h["mac"], fill=(203, 213, 225), font=f_sm)
-                d.text((400, y_row + 4), h["last_seen"], fill=(148, 163, 184), font=f_sm)
+            y_row = 140
+            for row_i, h in enumerate(hosts_sorted[:10]):
+                is_sel = (STATE.selected_host_index == row_i)
                 if h["known"]:
-                    d.text((590, y_row + 4), "[ ZNANY HOST ]", fill=(74, 222, 128), font=f_sm)
+                    # Known host: Green theme
+                    row_bg = (13, 33, 23) if not is_sel else (20, 52, 36)
+                    txt_col = (74, 222, 128)
+                    status_str = f"[ ZNANY ] {h['last_seen']}"
+                    status_col = (74, 222, 128)
                 else:
-                    d.text((590, y_row + 4), "[ ! NOWY INTRUZ ! ]", fill=(251, 191, 36), font=f_sm)
+                    # Unknown host: Red theme
+                    row_bg = (60, 18, 18) if not is_sel else (88, 26, 26)
+                    txt_col = (248, 113, 113)
+                    status_str = f"[ ! NIEZNANY ! ] {h['last_seen']}"
+                    status_col = (252, 165, 165)
+
+                d.rectangle(
+                    [12, y_row, 788, y_row + 25],
+                    fill=row_bg,
+                    outline=(250, 204, 21) if is_sel else None,
+                    width=2 if is_sel else 1,
+                )
+                d.text((22, y_row + 4), h["ip"], fill=txt_col, font=f_sm)
+                vendor_txt = h.get("vendor", lookup_device_info(h["mac"], h["ip"]))
+                d.text((160, y_row + 4), vendor_txt[:26], fill=txt_col, font=f_sm)
+                d.text((395, y_row + 4), h["mac"], fill=(203, 213, 225), font=f_sm)
+                d.text((575, y_row + 4), status_str, fill=status_col, font=f_sm)
                 y_row += 27
 
             # Bottom Touch Buttons
-            d.rectangle([12, 420, 430, 472], fill=(21, 128, 61), outline=(74, 222, 128), width=2)
-            d.text((28, 437), "[A] ZATWIERDZ WSZYSTKIE NOWE JAKO ZNANE", fill=(255, 255, 255), font=f_sm)
+            d.rectangle([12, 420, 395, 472], fill=(21, 128, 61), outline=(74, 222, 128), width=2)
+            d.text((24, 437), "[A] ZATWIERDZ WSZYSTKIE JAKO ZNANE", fill=(255, 255, 255), font=f_sm)
 
-            d.rectangle([442, 420, 788, 472], fill=(30, 58, 138), outline=(56, 189, 248), width=2)
-            d.text((465, 437), "[S] WYMUS SKANOWANIE PODSIECI TERAZ", fill=(255, 255, 255), font=f_sm)
+            d.rectangle([405, 420, 788, 472], fill=(30, 58, 138), outline=(56, 189, 248), width=2)
+            d.text((435, 437), "[S] WYMUS SKANOWANIE PODSIECI", fill=(255, 255, 255), font=f_sm)
 
         elif active_tab == 2:
             # ================= TAB 3: IDS SENSORS & CANARY HONEYPOT =================
             # ARP Guard Card
             arp_bg = (127, 29, 29) if STATE.arp_spoof_detected else (17, 24, 39)
-            d.rectangle([12, 62, 392, 152], fill=arp_bg, outline=(56, 189, 248), width=1)
-            d.text((24, 70), "STRAZNIK ARP (MITM / ARP SPOOFING GUARD)", fill=(56, 189, 248), font=f_sm)
-            d.text((24, 94), f"Brama: {STATE.gateway_ip} -> {STATE.gateway_mac}", fill=(255, 255, 255), font=f_sm)
-            d.text((24, 118), STATE.arp_spoof_detail[:46], fill=(74, 222, 128) if not STATE.arp_spoof_detected else (254, 202, 202), font=f_sm)
+            d.rectangle([12, 60, 392, 156], fill=arp_bg, outline=(56, 189, 248), width=1)
+            d.text((22, 68), "STRAZNIK ARP (MITM / ARP SPOOFING)", fill=(56, 189, 248), font=f_sm)
+            d.text((22, 90), f"Brama: {STATE.gateway_ip} -> {STATE.gateway_mac}", fill=(255, 255, 255), font=f_sm)
+            col_arp = (254, 202, 202) if STATE.arp_spoof_detected else (74, 222, 128)
+            d.text((22, 112), STATE.arp_spoof_detail_l1[:46], fill=col_arp, font=f_sm)
+            d.text((22, 132), STATE.arp_spoof_detail_l2[:46], fill=col_arp, font=f_sm)
 
             # Wi-Fi Evil Twin Card
             wifi_bg = (127, 29, 29) if STATE.evil_twin_detected else (17, 24, 39)
-            d.rectangle([404, 62, 788, 152], fill=wifi_bg, outline=(56, 189, 248), width=1)
-            d.text((416, 70), "STRAZNIK WI-FI (EVIL TWIN / ROGUE AP)", fill=(56, 189, 248), font=f_sm)
-            d.text((416, 94), f"SSID: {STATE.ssid} | BSSID: {STATE.bssid}", fill=(255, 255, 255), font=f_sm)
-            d.text((416, 118), STATE.evil_twin_detail[:46], fill=(74, 222, 128) if not STATE.evil_twin_detected else (254, 202, 202), font=f_sm)
+            d.rectangle([404, 60, 788, 156], fill=wifi_bg, outline=(56, 189, 248), width=1)
+            d.text((414, 68), "STRAZNIK WI-FI (EVIL TWIN / ROGUE AP)", fill=(56, 189, 248), font=f_sm)
+            d.text((414, 90), f"SSID: {STATE.ssid} | BSSID: {STATE.bssid}", fill=(255, 255, 255), font=f_sm)
+            col_wifi = (254, 202, 202) if STATE.evil_twin_detected else (74, 222, 128)
+            d.text((414, 112), STATE.evil_twin_detail[:46], fill=col_wifi, font=f_sm)
 
             # Canary Honeypot Listeners Table
-            d.rectangle([12, 162, 788, 410], fill=(15, 23, 42), outline=(51, 65, 85), width=1)
+            d.rectangle([12, 164, 788, 410], fill=(15, 23, 42), outline=(51, 65, 85), width=1)
             d.text(
-                (24, 170),
-                "PULAPKI PORTOW TCP (CANARY HONEYPOT) - kazde polaczenie z LAN oznacza skaner/intruza:",
+                (22, 172),
+                "PULAPKI PORTOW TCP (CANARY HONEYPOT) - skaner / intruz w sieci:",
                 fill=(251, 191, 36),
                 font=f_sm,
             )
@@ -999,12 +1403,12 @@ def render_frame(fonts) -> Image.Image:
 
         elif active_tab == 3:
             # ================= TAB 4: ALARM LOG =================
-            d.rectangle([12, 62, 788, 96], fill=(30, 41, 59))
-            d.text((24, 71), "CZAS      | POZIOM | ZRODLO     | OPIS ZDARZENIA BEZPIECZENSTWA", fill=(56, 189, 248), font=f_sm)
+            d.rectangle([12, 60, 788, 94], fill=(30, 41, 59))
+            d.text((22, 69), "CZAS     | POZ   | ZRODLO    | OPIS ZDARZENIA BEZPIECZENSTWA", fill=(56, 189, 248), font=f_sm)
 
-            y_l = 102
+            y_l = 100
             if not STATE.event_log:
-                d.text((24, 140), "Brak zarejestrowanych zdarzen bezpieczenstwa od uruchomienia.", fill=(148, 163, 184), font=f_md)
+                d.text((22, 140), "Brak zarejestrowanych zdarzen bezpieczenstwa od uruchomienia.", fill=(148, 163, 184), font=f_md)
             else:
                 for ev in list(STATE.event_log)[:11]:
                     lvl = ev["level"]
@@ -1018,8 +1422,8 @@ def render_frame(fonts) -> Image.Image:
                         row_bg = (17, 24, 39)
                         txt_col = (203, 213, 225)
                     d.rectangle([12, y_l, 788, y_l + 26], fill=row_bg)
-                    line_str = f"{ev['time']}  | {lvl:<6s} | {ev['source']:<10s} | {ev['msg'][:58]}"
-                    d.text((20, y_l + 5), line_str, fill=txt_col, font=f_sm)
+                    line_str = f"{ev['time']} | {lvl:<5s} | {ev['source']:<9s} | {ev['msg'][:78]}"
+                    d.text((18, y_l + 5), line_str, fill=txt_col, font=f_sm)
                     y_l += 28
 
             # Bottom Touch Buttons
@@ -1028,6 +1432,42 @@ def render_frame(fonts) -> Image.Image:
 
             d.rectangle([482, 420, 788, 472], fill=(30, 41, 59), outline=(148, 163, 184), width=2)
             d.text((505, 437), f"[M] DZWIEK: {'WYLACZONY' if muted else 'WLACZONY'}", fill=(255, 255, 255), font=f_sm)
+
+        # Modal Popup for Device Details if selected
+        if STATE.selected_host_mac and STATE.selected_host_mac in STATE.lan_hosts:
+            sh = STATE.lan_hosts[STATE.selected_host_mac]
+            mx0, my0, mx1, my1 = 120, 75, 680, 420
+            # Dim outer region
+            d.rectangle([mx0 - 4, my0 - 4, mx1 + 4, my1 + 4], fill=(11, 15, 25), outline=(56, 189, 248), width=3)
+            d.rectangle([mx0, my0, mx1, my1], fill=(15, 23, 42))
+            d.rectangle([mx0, my0, mx1, my0 + 36], fill=(30, 58, 138))
+            d.text((mx0 + 16, my0 + 9), "SZCZEGOLY URZADZENIA W SIECI LAN", fill=(255, 255, 255), font=f_md)
+
+            sy = my0 + 50
+            d.text((mx0 + 20, sy), f"Adres IP:      {sh['ip']}", fill=(255, 255, 255), font=f_md)
+            sy += 28
+            d.text((mx0 + 20, sy), f"Adres MAC:     {sh['mac']}", fill=(203, 213, 225), font=f_md)
+            sy += 28
+            vendor_full = sh.get('vendor', lookup_device_info(sh['mac'], sh['ip']))
+            d.text((mx0 + 20, sy), f"Identyfikator: {vendor_full}", fill=(56, 189, 248), font=f_md)
+            sy += 28
+            h_name = STATE.host_names.get(sh['ip'], "Brak nazwy mDNS/DNS")
+            d.text((mx0 + 20, sy), f"Nazwa hosta:   {h_name}", fill=(203, 213, 225), font=f_sm)
+            sy += 24
+            d.text((mx0 + 20, sy), f"Ostatnio widz: {sh['last_seen']}", fill=(148, 163, 184), font=f_sm)
+            sy += 24
+            st_txt = "ZNANY (Zaufane urzadzenie domowe)" if sh['known'] else "NIEZNANY / NOWY (Wymaga uwagi!)"
+            st_col = (74, 222, 128) if sh['known'] else (248, 113, 113)
+            d.text((mx0 + 20, sy), f"Status:        {st_txt}", fill=st_col, font=f_md)
+
+            # Modal Action Buttons
+            btn_toggle_txt = "[O] OZNACZ JAKO NIEZNANE" if sh['known'] else "[Z] ZATWIERDZ JAKO ZNANE"
+            btn_toggle_bg = (185, 28, 28) if sh['known'] else (21, 128, 61)
+            d.rectangle([mx0 + 20, my1 - 60, mx0 + 265, my1 - 15], fill=btn_toggle_bg, outline=(255, 255, 255), width=2)
+            d.text((mx0 + 30, my1 - 44), btn_toggle_txt, fill=(255, 255, 255), font=f_sm)
+
+            d.rectangle([mx1 - 240, my1 - 60, mx1 - 20, my1 - 15], fill=(71, 85, 105), outline=(255, 255, 255), width=2)
+            d.text((mx1 - 195, my1 - 44), "[ESC / X] ZAMKNIJ", fill=(255, 255, 255), font=f_sm)
 
         # Draw touch/mouse cursor crosshair if active
         if STATE.show_cursor:
@@ -1041,21 +1481,38 @@ def main():
     add_security_event("INFO", "SOC", "Uruchomiono monitor sieci domowej i czujniki IDS", ())
     fonts = load_fonts()
 
+    # Silence kernel printk console messages so they do not write over /dev/fb0
+    try:
+        subprocess.run(["sysctl", "-w", "kernel.printk=1 4 1 7"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
     threading.Thread(target=monitor_ping_and_system_loop, daemon=True).start()
     threading.Thread(target=lan_and_arp_guard_loop, daemon=True).start()
     threading.Thread(target=canary_honeypot_loop, daemon=True).start()
     threading.Thread(target=input_reader_loop, daemon=True).start()
 
+    fb_fd = None
+    if os.path.exists(FB_DEV):
+        try:
+            fb_fd = os.open(FB_DEV, os.O_RDWR)
+        except Exception:
+            fb_fd = None
+
     while True:
         try:
-            if is_dashboard_vt_active() and os.path.exists(FB_DEV):
+            if is_dashboard_vt_active() and fb_fd is not None:
                 img = render_frame(fonts)
-                raw565 = image_to_rgb565_bytes(img)
-                with open(FB_DEV, "wb") as fb:
-                    fb.write(raw565)
+                if C_BLITTER is not None:
+                    raw_rgb = img.tobytes()
+                    C_BLITTER(fb_fd, raw_rgb, FB_WIDTH * FB_HEIGHT)
+                else:
+                    raw565 = image_to_rgb565_bytes(img)
+                    os.pwrite(fb_fd, raw565, 0)
         except Exception:
             pass
-        time.sleep(0.5)
+        REDRAW_EVENT.wait(timeout=0.35)
+        REDRAW_EVENT.clear()
 
 
 if __name__ == "__main__":
