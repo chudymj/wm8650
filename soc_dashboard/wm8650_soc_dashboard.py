@@ -1033,14 +1033,15 @@ def input_reader_loop():
                             continue
 
                         c = seq[0]
-                        if seq == "\x1b":  # ESC alone
+                        if seq == "\x1b" or c in ("x", "X"):  # ESC or X
                             with STATE.lock:
                                 if STATE.selected_host_mac is not None:
                                     STATE.selected_host_mac = None
                                     REDRAW_EVENT.set()
                                     trigger_beep("click")
                                     continue
-                            switch_to_terminal()
+                            if seq == "\x1b":
+                                switch_to_terminal()
                             continue
 
                         if c in ("1", "2", "3", "4"):
@@ -1472,9 +1473,10 @@ def render_frame(fonts) -> Image.Image:
             d.text((505, 437), f"[M] DZWIEK: {'WYLACZONY' if muted else 'WLACZONY'}", fill=(255, 255, 255), font=f_sm)
 
         # Modal Popup for Device Details if selected
-        if STATE.selected_host_mac and STATE.selected_host_mac in STATE.lan_hosts:
-            sh = STATE.lan_hosts[STATE.selected_host_mac]
-            mx0, my0, mx1, my1 = 120, 75, 680, 420
+        if STATE.selected_host_mac:
+            sh = STATE.lan_hosts.get(STATE.selected_host_mac.lower())
+            if sh is not None:
+                mx0, my0, mx1, my1 = 120, 75, 680, 420
             # Dim outer region
             d.rectangle([mx0 - 4, my0 - 4, mx1 + 4, my1 + 4], fill=(11, 15, 25), outline=(56, 189, 248), width=3)
             d.rectangle([mx0, my0, mx1, my1], fill=(15, 23, 42))
