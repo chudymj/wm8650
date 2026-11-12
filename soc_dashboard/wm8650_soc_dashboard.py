@@ -237,6 +237,12 @@ OUI_DATABASE = {
     "52:54:4c": "Realtek",
     "00:40:63": "WonderMedia",
     "00:02:55": "VIA Technologies",
+    "84:16:f9": "TP-Link",
+    "e8:b1:fc": "Tuya Smart",
+    "1c:90:ff": "Xiaomi Smart",
+    "88:a2:9e": "TP-Link",
+    "30:cc:21": "Brama domowa",
+    "10:f0:05": "Apple",
 }
 
 CANARY_PORTS = [
@@ -339,6 +345,14 @@ def lookup_device_info(mac: str, ip: str) -> str:
         if hostname:
             return f"{vendor} ({hostname[:12]})"
         return vendor
+
+    # Check for IEEE 802 Locally Administered / Private Randomized MAC (bit 1 of byte 0 set)
+    try:
+        b0 = int(mac_lower[:2], 16)
+        if b0 & 0x02:
+            return f"Smartfon ({hostname})" if hostname else "Smartfon / Tablet (Pryw. MAC)"
+    except Exception:
+        pass
 
     if hostname:
         return f"Host: {hostname[:16]}"
@@ -455,10 +469,13 @@ def dns_resolver_worker():
             try:
                 name, _, _ = socket.gethostbyaddr(ip)
                 if name:
-                    short = name.split(".")[0]
-                    with STATE.lock:
-                        STATE.host_names[ip] = short
-                    REDRAW_EVENT.set()
+                    clean = name.strip()
+                    if not clean.replace(".", "").isdigit() and clean != ip:
+                        short = clean.split(".")[0]
+                        if short and not short.isdigit():
+                            with STATE.lock:
+                                STATE.host_names[ip] = short
+                            REDRAW_EVENT.set()
             except Exception:
                 pass
         time.sleep(0.5)
