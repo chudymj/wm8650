@@ -507,3 +507,23 @@ Podczas fizycznych testów na działającym tablecie (`puzhi_7inch_vt1609_ts`, `
    * Powrót do ekranu monitora następuje w dowolnej chwili przez wywołanie komendy `soc` (lub `chvt 3`).
    * W interfejsie warto zmienić etykietę na bardziej jednoznaczną: np. `[5] KONSOLA (W TLE)`.
 
+---
+
+## 9. Podsumowanie Sesji Badawczej (2026-11-14 / 2026-11-15) i Decyzja o Gałęzi TUI
+
+Podczas szczegółowych testów laboratoryjnych na żywym sprzęcie ustalono:
+1. **Przyczyna narzutu CPU trybu graficznego (FreeType vs Bitmap):**
+   * Rdzeń `ARM926EJ-S` nie posiada sprzętowego FPU. Renderowanie czcionek TrueType biblioteką FreeType pochłaniało ponad 3 sekundy na 50 linii tekstu, powodując 100% obciążenia rdzenia w pętli renderowania.
+   * Zastąpienie fontów TTF wbudowanymi fontami bitmapowymi (`ImageFont.load_default()`) skróciło czas renderowania 10-krotnie (~0,3 s), a wydłużenie interwału odświeżania w spoczynku do 1,5 s zredukowało obciążenie CPU do ~20%.
+2. **Przebudowa Zakładki `[1] PRZEGLĄD`:**
+   * Zgodnie z wytycznymi usunięto zasobożerny wykres liniowy opóźnień. Zastąpiono go dwoma modularnymi kafelkami:
+     * `BRAMA LAN (192.168.9.1)` – metryki: `last`, `min`, `avg`, `max`, `Loss %` oraz pasek jakości połączenia.
+     * `INTERNET (1.1.1.1 / 8.8.8.8)` – metryki: `last`, `min`, `avg`, `max`, `Loss %`, czas DNS oraz pasek statusu WAN.
+3. **Stan Ekranu Dotykowego (VT1609 przez SPI0):**
+   * W teście izolowanym (`verify_touch_live.py`) potwierdzono fizyczne działanie magistrali SPI0 Mode 3 (`0xD8240000`), odczyt SAR-ADC baterii (~3850 mV) oraz fabryczną macierz kalibracji (`174 -23279 47793714 14523 268 -4891371 55776`).
+   * W pracy ciągłej demona w tle, z uwagi na specyfikę ekranu oporowego oraz odpytywanie rejestrów `0xD0..0xD3`, dotyk nie wykazuje stabilnej i ergonomicznej reakcji.
+   * **Decyzja:** Zgodnie z dyspozycją użytkownika zawieszono dalsze prace nad dotykiem oporowym na tym etapie.
+4. **Decyzja o Utworzeniu Nowej Gałęzi dla Dashboardu Tekstowego (TUI):**
+   * Dotychczasowy dorobek trybu graficznego (zoptymalizowany pod fonty bitmapowe, karty pomiarów i obsługę evdev) zostaje zachowany na gałęzi `feature/soc-ids-dashboard` i wypchnięty do repozytorium GitHub.
+   * Do dalszego rozwoju tworzona jest nowa dedykowana gałąź **`feature/tui-text-dashboard`**, w ramach której powstanie ultra-lekki dashboard tekstowy w konsoli linuksowej (`fbcon` na `tty3`), zużywający znikome ilości CPU (< 2-3%) i w 100% zachowujący wszystkie funkcje bezpieczeństwa (5 zakładek, detekcję LAN, ARP Guard, Canary Honeypot, Alarm Log).
+

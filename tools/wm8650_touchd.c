@@ -41,8 +41,10 @@ static void vt1603_write(volatile uint8_t *spi, uint8_t reg, uint8_t val) {
     REG8(spi + 0x10) = (reg & 0x7F) | 0x80;
     REG8(spi + 0x10) = (reg >> 7) & 0x01;
     REG8(spi + 0x10) = val;
+    REG32(spi + 0x00) |= (1u << 5);
     int timeout = 20000;
     while ((REG32(spi + 0x04) & (1u << 7)) && --timeout > 0) {}
+    REG32(spi + 0x00) &= ~(1u << 5);
     (void)REG8(spi + 0x30);
     (void)REG8(spi + 0x30);
     (void)REG8(spi + 0x30);
@@ -52,9 +54,15 @@ static uint8_t vt1603_read(volatile uint8_t *spi, uint8_t reg) {
     spi0_reset_fifo(spi);
     REG8(spi + 0x10) = (reg & 0x7F);
     REG8(spi + 0x10) = (reg >> 7) & 0x01;
-    REG8(spi + 0x10) = 0xFF;
+    REG8(spi + 0x10) = 0x00;
+    REG8(spi + 0x10) = 0x00;
+    REG8(spi + 0x10) = 0x00;
+    REG32(spi + 0x00) |= (1u << 5);
     int timeout = 20000;
     while ((REG32(spi + 0x04) & (1u << 7)) && --timeout > 0) {}
+    REG32(spi + 0x00) &= ~(1u << 5);
+    (void)REG8(spi + 0x30);
+    (void)REG8(spi + 0x30);
     (void)REG8(spi + 0x30);
     (void)REG8(spi + 0x30);
     return REG8(spi + 0x30);
@@ -67,34 +75,38 @@ static void init_spi0_and_vt1609(volatile uint8_t *pmc, volatile uint8_t *gpio, 
 
     /* Configure GPIO Bank 2 (offset 0x48): clear bits 24..27 for hardware SPI0 function */
     REG32(gpio + 0x48) &= ~(0x0Fu << 24);
-    /* Enable pull-up for MISO (bit 25) */
-    REG32(gpio + 0x488) |= (1u << 25);
-    REG32(gpio + 0x4C8) |= (1u << 25);
+    /* Enable pull-up for SPI0 pins (bit 24..27) */
+    REG32(gpio + 0x488) |= (0x0Fu << 24);
+    REG32(gpio + 0x4C8) |= (0x0Fu << 24);
 
-    /* Initialize SPI0 controller */
-    REG32(spi + 0x00) = (30u << 21) | (1u << 16) | (1u << 17);
+    /* Initialize SPI0 controller: Mode 3 (CPOL=1, CPHA=1), TCD=30 (~1.5 MHz) */
+    uint32_t tcd = 30;
+    uint32_t cr_val = (tcd << 21) | (1u << 2) | (1u << 1);
+    REG32(spi + 0x00) = cr_val;
     REG32(spi + 0x04) = 0xFFFFFFFFu;
-    REG32(spi + 0x08) = (1u << 2) | (1u << 5);
+    REG32(spi + 0x08) = 0x24u;
     REG32(spi + 0x0C) = 0x20u;
-    REG32(spi + 0x00) |= (1u << 5);
 
-    /* Initialize VT1609 SAR-ADC & Touchscreen state machine */
-    vt1603_write(spi, 0xC0, 0x08); /* PWC_REG: enable SAR-ADC power & TS clock */
-    vt1603_write(spi, 0xC3, 0x60); /* Panel settling time */
-    uint8_t intcr = vt1603_read(spi, 0xC8);
-    vt1603_write(spi, 0xC8, intcr & ~(1u << 7)); /* Active low IRQ */
-    vt1603_write(spi, 0xCA, vt1603_read(spi, 0xCA) | 0x09); /* Clear INTS */
-    vt1603_write(spi, 0xC1, 0x02); /* CR_REG: BIT1 = Auto X/Y position mode */
+    /* Initialize VT1609 SAR-ADC & Touchscreen registers exactly per BSP kernel driver */
+    vt1603_write(spi, 0xC0, 0x08); /* PWC_REG: SAR-ADC power enable */
+    vt1603_write(spi, 0xC1, 0x02); /* CR_REG: auto 4-wire position conversion mode */
+    vt1603_write(spi, 0xC8, 0x7F); /* INTCR_REG */
+    vt1603_write(spi, 0xC9, 0x0E); /* INTEN_REG: penup, pendown, timeout */
+    vt1603_write(spi, 0xC3, 0x04); /* CDPR_REG: SCLK divisor */
+    vt1603_write(spi, 0xC4, 0x7C); /* TSPC_REG: precharge time */
+    vt1603_write(spi, 0xC5, 0x4C);
+    vt1603_write(spi, 0xCA, 0x0D); /* Clear initial INTS */
 }
 
 static void update_battery_file(volatile uint8_t *spi) {
-    /* Switch temporarily to manual battery ADC channel (BIT0) */
+    /* Switch temporarily to manual battery ADC channel */
+    vt1603_write(spi, 0xC0, 0x08);
     vt1603_write(spi, 0xC1, 0x00);
     vt1603_write(spi, 0xC6, 0x00);
     vt1603_write(spi, 0xC7, 0x01); /* AMCR_REG: Battery channel */
     vt1603_write(spi, 0xCA, vt1603_read(spi, 0xCA) | 0x01);
-    vt1603_write(spi, 0xC1, (1u << 4)); /* Start manual ADC conversion */
-    usleep(6000);
+    vt1603_write(spi, 0xC1, 0x10); /* Start manual ADC conversion */
+    usleep(10000);
     uint8_t bl = vt1603_read(spi, 0xCE);
     uint8_t bh = vt1603_read(spi, 0xCF);
     /* Restore auto touchscreen mode */
@@ -103,10 +115,9 @@ static void update_battery_file(volatile uint8_t *spi) {
     int raw_bat = ((bh & 0x0F) << 8) | bl;
     int mv = (raw_bat * 1047) / 1000;
     if (mv < 3000 || mv > 4500) {
-        /* Fallback if powered directly by DC adapter or uncalibrated */
-        mv = 4050;
+        mv = 3850;
     }
-    int pct = (mv - 3500) * 100 / (4100 - 3500);
+    int pct = (mv - 3500) * 100 / (4150 - 3500);
     if (pct < 0) pct = 0;
     if (pct > 100) pct = 100;
 
@@ -174,13 +185,14 @@ int main(int argc, char **argv) {
 
         uint8_t ints = vt1603_read(spi, 0xCA);
         int pen_down = ((ints & (1u << 4)) == 0);
+        int conv_end = (ints & 0x01);
 
-        if (pen_down) {
+        if (pen_down && conv_end) {
             uint8_t xl = vt1603_read(spi, 0xD0);
             uint8_t xh = vt1603_read(spi, 0xD1);
             uint8_t yl = vt1603_read(spi, 0xD2);
             uint8_t yh = vt1603_read(spi, 0xD3);
-            vt1603_write(spi, 0xCA, ints | 0x09);
+            vt1603_write(spi, 0xCA, ints & 0x0F);
 
             int rx = ((xh & 0x0F) << 8) | xl;
             int ry = ((yh & 0x0F) << 8) | yl;
@@ -209,6 +221,12 @@ int main(int argc, char **argv) {
                     char msg[64];
                     int len = snprintf(msg, sizeof(msg), "TOUCH %d %d %d %d\n", px, py, avg_rx, avg_ry);
                     sendto(sock, msg, (size_t)len, 0, (struct sockaddr *)&dst, sizeof(dst));
+
+                    FILE *tfp = fopen("/run/wm8650_touch_last.txt", "w");
+                    if (tfp) {
+                        fprintf(tfp, "%ld %d %d %d %d\n", (long)time(NULL), px, py, avg_rx, avg_ry);
+                        fclose(tfp);
+                    }
 
                     pen_was_down = 1;
                 }

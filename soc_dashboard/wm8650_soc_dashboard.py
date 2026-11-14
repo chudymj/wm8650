@@ -886,8 +886,8 @@ def handle_click(x: int, y: int):
             return
         return
 
-    # Top navigation bar (height 56 px, 5 tabs x 160 px)
-    if y < 56:
+    # Top navigation bar (height ~56 px, generous touch hit area up to 70 px, 5 tabs x 160 px)
+    if y < 70:
         tab_idx = min(4, max(0, x // 160))
         if tab_idx == 4:
             switch_to_terminal()
@@ -1063,6 +1063,7 @@ def input_reader_loop():
     # 4. Modern Linux evdev devices (/dev/input/event*) for USB/wireless mice, keyboards, touchscreens
     evdev_fds = {}  # path -> fd
     last_evdev_scan = 0.0
+    last_mouse_redraw = 0.0
     EV_FORMAT = "llHHi"
     EV_SIZE = struct.calcsize(EV_FORMAT)
 
@@ -1111,10 +1112,10 @@ def input_reader_loop():
                     except Exception:
                         pass
 
-                elif r == mouse_fd:
+                elif mouse_fd is not None and r == mouse_fd:
                     try:
                         buf = os.read(mouse_fd, 3)
-                        if len(buf) == 3:
+                        if len(buf) == 3 and not evdev_fds:
                             btns = buf[0]
                             dx = struct.unpack("b", bytes([buf[1]]))[0]
                             dy = struct.unpack("b", bytes([buf[2]]))[0]
@@ -1126,7 +1127,10 @@ def input_reader_loop():
                             if btns & 0x01:
                                 handle_click(cx, cy)
                             else:
-                                REDRAW_EVENT.set()
+                                now_m = time.time()
+                                if now_m - last_mouse_redraw >= 0.1:
+                                    last_mouse_redraw = now_m
+                                    REDRAW_EVENT.set()
                     except Exception:
                         pass
 
@@ -1140,12 +1144,18 @@ def input_reader_loop():
                                     with STATE.lock:
                                         STATE.cursor_x = max(0, min(799, STATE.cursor_x + ev_val))
                                         STATE.show_cursor = True
-                                    REDRAW_EVENT.set()
+                                    now_m = time.time()
+                                    if now_m - last_mouse_redraw >= 0.1:
+                                        last_mouse_redraw = now_m
+                                        REDRAW_EVENT.set()
                                 elif ev_code == 1:  # REL_Y
                                     with STATE.lock:
                                         STATE.cursor_y = max(0, min(479, STATE.cursor_y + ev_val))
                                         STATE.show_cursor = True
-                                    REDRAW_EVENT.set()
+                                    now_m = time.time()
+                                    if now_m - last_mouse_redraw >= 0.1:
+                                        last_mouse_redraw = now_m
+                                        REDRAW_EVENT.set()
                                 elif ev_code == 8:  # REL_WHEEL
                                     with STATE.lock:
                                         if ev_val > 0:
@@ -1330,20 +1340,8 @@ def image_to_rgb565_bytes(img: Image.Image) -> bytes:
 
 
 def load_fonts():
-    font_paths = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-    ]
-    for path in font_paths:
-        if os.path.exists(path):
-            try:
-                return (
-                    ImageFont.truetype(path, 13),
-                    ImageFont.truetype(path, 16),
-                    ImageFont.truetype(path, 22),
-                )
-            except Exception:
-                pass
+    # Use fast bitmap fonts: ARM926EJ-S lacks hardware FPU, FreeType TTF takes 3.1s / 50 lines.
+    # Built-in bitmap font takes only ~6 ms per line and avoids 100% CPU lockup.
     default_f = ImageFont.load_default()
     return default_f, default_f, default_f
 
@@ -1367,7 +1365,7 @@ def render_frame(fonts) -> Image.Image:
             "[2] HOSTY LAN",
             "[3] CZUJNIKI IDS",
             "[4] ALARM LOG",
-            "[5] TERMINAL >_",
+            "[5] KONSOLA >_",
         ]
         for i, title in enumerate(tab_titles):
             x0 = i * 160 + 2
@@ -1461,46 +1459,62 @@ def render_frame(fonts) -> Image.Image:
                 font=f_sm,
             )
 
-            # Live Latency Chart (y = 212..396)
-            d.rectangle([12, 212, 788, 396], fill=(15, 23, 42), outline=(51, 65, 85), width=1)
-            d.text(
-                (22, 218),
-                "WYKRES OPOZNIEN NA ZYWO: Zielony = Brama LAN, Cyjan = Internet 1.1.1.1",
-                fill=(148, 163, 184),
-                font=f_sm,
-            )
-            chart_x0, chart_y0, chart_x1, chart_y1 = 24, 240, 776, 386
-            chart_h = chart_y1 - chart_y0
-            for gy in (chart_y0 + chart_h // 4, chart_y0 + chart_h // 2, chart_y0 + 3 * chart_h // 4):
-                d.line([(chart_x0, gy), (chart_x1, gy)], fill=(30, 41, 59), width=1)
+            # Detailed Gateway & Internet Latency Telemetry (y = 212..396)
+            gw_valid = [x for x in STATE.hist_gw if x >= 0]
+            gw_loss_count = sum(1 for x in STATE.hist_gw if x < 0)
+            gw_loss_pct = int(gw_loss_count * 100 / max(1, len(STATE.hist_gw)))
+            gw_last = STATE.ping_gw_ms
+            gw_min = min(gw_valid) if gw_valid else 0.0
+            gw_max = max(gw_valid) if gw_valid else 0.0
+            gw_avg = (sum(gw_valid) / len(gw_valid)) if gw_valid else 0.0
 
-            gw_pts = list(STATE.hist_gw)
-            in_pts = list(STATE.hist_inet)
-            max_ms = max(50.0, max([x for x in gw_pts + in_pts if x > 0] + [50.0]))
-            step_x = (chart_x1 - chart_x0) / 59.0
+            in_valid = [x for x in STATE.hist_inet if x >= 0]
+            in_last = STATE.ping_inet_ms
+            in_min = min(in_valid) if in_valid else 0.0
+            in_max = max(in_valid) if in_valid else 0.0
+            in_avg = (sum(in_valid) / len(in_valid)) if in_valid else 0.0
 
-            prev_gw_xy = None
-            prev_in_xy = None
-            for idx in range(len(in_pts)):
-                px = int(chart_x0 + idx * step_x)
-                v_gw = gw_pts[idx]
-                v_in = in_pts[idx]
-                if v_in < 0:
-                    d.line([(px, chart_y0 + 10), (px, chart_y1)], fill=(220, 38, 38), width=3)
-                    prev_in_xy = None
-                else:
-                    py_in = int(chart_y1 - min(1.0, v_in / max_ms) * chart_h)
-                    if prev_in_xy is not None:
-                        d.line([prev_in_xy, (px, py_in)], fill=(56, 189, 248), width=2)
-                    prev_in_xy = (px, py_in)
+            # Card 1: Ping Brama Domowa (Router LAN) - left [12, 212, 394, 396]
+            d.rectangle([12, 212, 394, 396], fill=(17, 24, 39), outline=(51, 65, 85), width=1)
+            d.rectangle([12, 212, 394, 240], fill=(30, 41, 59))
+            d.text((22, 218), f"PING BRAMA LAN ({STATE.gateway_ip})", fill=(74, 222, 128), font=f_sm)
 
-                if v_gw >= 0:
-                    py_gw = int(chart_y1 - min(1.0, v_gw / max_ms) * chart_h)
-                    if prev_gw_xy is not None:
-                        d.line([prev_gw_xy, (px, py_gw)], fill=(74, 222, 128), width=2)
-                    prev_gw_xy = (px, py_gw)
-                else:
-                    prev_gw_xy = None
+            last_gw_str = f"{gw_last:.1f} ms" if gw_last >= 0 else "TIMEOUT"
+            last_gw_col = (74, 222, 128) if (gw_last >= 0 and gw_last < 20) else ((251, 191, 36) if gw_last >= 0 else (248, 113, 113))
+            d.text((24, 248), "Biezacy (last):", fill=(148, 163, 184), font=f_sm)
+            d.text((150, 246), last_gw_str, fill=last_gw_col, font=f_lg)
+
+            d.text((24, 282), f"Min:  {gw_min:5.1f} ms", fill=(226, 232, 240), font=f_sm)
+            d.text((210, 282), f"Sredni: {gw_avg:5.1f} ms", fill=(56, 189, 248), font=f_sm)
+            d.text((24, 310), f"Max:  {gw_max:5.1f} ms", fill=(226, 232, 240), font=f_sm)
+            d.text((210, 310), f"Utrata: {gw_loss_pct}% ({gw_loss_count} pkt)", fill=(248, 113, 113) if gw_loss_pct > 0 else (74, 222, 128), font=f_sm)
+
+            # Local gateway status strip
+            gw_st_bg = (21, 128, 61) if gw_loss_pct == 0 and gw_last >= 0 else ((180, 83, 9) if gw_last >= 0 else (185, 28, 28))
+            gw_st_msg = "POLACZENIE Z BRAMA: STABILNE" if (gw_loss_pct == 0 and gw_last >= 0) else ("OPUSZCZANIE PAKIETOW!" if gw_last >= 0 else "BRAK LACZNOSCI Z ROUTEREM!")
+            d.rectangle([20, 344, 386, 384], fill=gw_st_bg)
+            d.text((30, 355), gw_st_msg, fill=(255, 255, 255), font=f_sm)
+
+            # Card 2: Ping Internet (Cloudflare / Google WAN) - right [406, 212, 788, 396]
+            d.rectangle([406, 212, 788, 396], fill=(17, 24, 39), outline=(51, 65, 85), width=1)
+            d.rectangle([406, 212, 788, 240], fill=(30, 41, 59))
+            d.text((416, 218), "PING INTERNET (WAN 1.1.1.1 / 8.8.8.8)", fill=(56, 189, 248), font=f_sm)
+
+            last_in_str = f"{in_last:.1f} ms" if in_last >= 0 else "TIMEOUT"
+            last_in_col = (74, 222, 128) if (in_last >= 0 and in_last < 60) else ((251, 191, 36) if in_last >= 0 else (248, 113, 113))
+            d.text((418, 248), "Biezacy (last):", fill=(148, 163, 184), font=f_sm)
+            d.text((544, 246), last_in_str, fill=last_in_col, font=f_lg)
+
+            d.text((418, 282), f"Min:  {in_min:5.1f} ms", fill=(226, 232, 240), font=f_sm)
+            d.text((604, 282), f"Sredni: {in_avg:5.1f} ms", fill=(56, 189, 248), font=f_sm)
+            d.text((418, 310), f"Max:  {in_max:5.1f} ms", fill=(226, 232, 240), font=f_sm)
+            d.text((604, 310), f"Loss: {STATE.packet_loss_pct}% | DNS {STATE.ping_dns_ms:.0f}ms", fill=(248, 113, 113) if STATE.packet_loss_pct > 10 else (74, 222, 128), font=f_sm)
+
+            # WAN status strip
+            in_st_bg = (21, 128, 61) if STATE.packet_loss_pct < 10 and in_last >= 0 else ((180, 83, 9) if in_last >= 0 else (185, 28, 28))
+            in_st_msg = "INTERNET: DOSTEPNY (ONLINE)" if (STATE.packet_loss_pct < 10 and in_last >= 0) else ("WYSOKIE OPOZNIENIA / LOSS" if in_last >= 0 else "AWARIA INTERNETU (OFFLINE)!")
+            d.rectangle([414, 344, 780, 384], fill=in_st_bg)
+            d.text((424, 355), in_st_msg, fill=(255, 255, 255), font=f_sm)
 
             # Bottom Telemetry Bar (y = 404..472)
             d.rectangle([12, 404, 788, 472], fill=(17, 24, 39), outline=(51, 65, 85), width=1)
@@ -1718,7 +1732,7 @@ def main():
     fb_fd = None
     prev_vt_active = False
     last_render_time = 0.0
-    MIN_FRAME_INTERVAL = 0.08  # Max ~12.5 FPS na ARM926EJ-S aby nie obciazac CPU
+    MIN_FRAME_INTERVAL = 0.3  # Max ~3.3 FPS na ARM926EJ-S aby zachowac CPU < 10%
 
     while True:
         try:
@@ -1764,7 +1778,7 @@ def main():
             except Exception:
                 pass
 
-        REDRAW_EVENT.wait(timeout=0.75)
+        REDRAW_EVENT.wait(timeout=1.5)
         REDRAW_EVENT.clear()
 
 
