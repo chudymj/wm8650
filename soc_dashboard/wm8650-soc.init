@@ -22,11 +22,12 @@ case "$1" in
         sysctl -w kernel.printk="1 4 1 7" >/dev/null 2>&1 || true
         echo 0 > /sys/class/graphics/fbcon/cursor_blink 2>/dev/null || true
 
-        if [ -x "$TOUCHD_BIN" ]; then
-            start-stop-daemon --start --quiet --background \
-                --make-pidfile --pidfile "$TOUCHD_PID" \
-                --exec "$TOUCHD_BIN" || true
-        fi
+        # Demon dotyku wylaczony w trybie tekstowym TUI dla oszczednosci CPU
+        # if [ -x "$TOUCHD_BIN" ]; then
+        #     start-stop-daemon --start --quiet --background \
+        #         --make-pidfile --pidfile "$TOUCHD_PID" \
+        #         --exec "$TOUCHD_BIN" || true
+        # fi
 
         if [ -c /dev/tty3 ]; then
             TERM=linux setterm -cursor off -blank 0 > /dev/tty3 2>/dev/null || true
