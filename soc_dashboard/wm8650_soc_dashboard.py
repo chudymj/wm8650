@@ -1160,11 +1160,11 @@ def render_tui_screen() -> str:
         sys_info = f" Cyber-Rama SOC & Domowy IDS | WonderMedia WM8650 | Debian 12 armel | tty3 fbcon (100x30)"
         lines.append(f"{B_BLK}{sys_info}{RST}")
 
-    # Build final ANSI string (Move cursor to Home, Hide Cursor)
-    out = ["\033[H\033[?25l"]
-    for row in lines[:TERM_HEIGHT]:
-        # Clear to end of line to prevent ghost characters
-        out.append(row + "\033[K\n")
+    # Build final ANSI string: direct row addressing without any newlines
+    # Prevents terminal from scrolling on row 30, which eliminates screen flickering and Tux ghosting
+    out = ["\033[?25l"]
+    for idx, row in enumerate(lines[:TERM_HEIGHT]):
+        out.append(f"\033[{idx + 1};1H{row}\033[K")
     return "".join(out)
 
 
@@ -1372,11 +1372,17 @@ def main():
             if tty_out_fd is None and os.path.exists(TTY_DEV):
                 try:
                     tty_out_fd = os.open(TTY_DEV, os.O_RDWR)
+                    os.write(tty_out_fd, b"\033[H\033[2J\033[3J\033[?25l")
                 except Exception:
                     tty_out_fd = None
 
             vt_active = is_dashboard_vt_active()
             if vt_active and not prev_vt_active:
+                if tty_out_fd is not None:
+                    try:
+                        os.write(tty_out_fd, b"\033[H\033[2J\033[3J\033[?25l")
+                    except Exception:
+                        pass
                 REDRAW_EVENT.set()
             prev_vt_active = vt_active
 
