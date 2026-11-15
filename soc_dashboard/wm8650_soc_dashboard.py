@@ -311,7 +311,7 @@ def lookup_vendor(mac: str) -> str:
 
 class DashboardState:
     def __init__(self):
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
         self.active_tab = 0  # 0: Overview, 1: Hosts, 2: IDS, 3: Alarm Log, 4: Terminal
 
         self.unread_warn = [0, 0, 0, 0, 0]
@@ -639,6 +639,7 @@ def lan_and_arp_guard_loop():
                                 current_arp[ip] = mac.lower()
 
             # ARP Spoofing check
+            spoof_alert = None
             if gw_ip in current_arp:
                 gw_mac = current_arp[gw_ip]
                 with STATE.lock:
@@ -647,14 +648,17 @@ def lan_and_arp_guard_loop():
                     elif STATE.gateway_mac != gw_mac:
                         if not STATE.arp_spoof_detected:
                             STATE.arp_spoof_detected = True
-                            add_security_event(
-                                "ALERT",
-                                "ARP",
-                                f"PODMIANA BRAMY! Oryginal: {STATE.gateway_mac} -> Nowy: {gw_mac}",
-                                (2, 3, 4),
-                            )
+                            spoof_alert = (STATE.gateway_mac, gw_mac)
+            if spoof_alert:
+                add_security_event(
+                    "ALERT",
+                    "ARP",
+                    f"PODMIANA BRAMY! Oryginal: {spoof_alert[0]} -> Nowy: {spoof_alert[1]}",
+                    (2, 3, 4),
+                )
 
             # Update LAN hosts list
+            new_events = []
             with STATE.lock:
                 for ip, mac in current_arp.items():
                     is_known = mac in STATE.known_macs
@@ -669,17 +673,20 @@ def lan_and_arp_guard_loop():
                             "known": is_known,
                         }
                         if not is_known:
-                            add_security_event(
-                                "WARN",
-                                "LAN",
-                                f"Wykryto nowe urzadzenie w podsieci LAN: {ip} ({vendor})",
-                                (1, 3),
-                            )
+                            new_events.append((ip, vendor))
                         queue_hostname_resolve(ip)
                     else:
                         STATE.lan_hosts[mac]["ip"] = ip
                         STATE.lan_hosts[mac]["last_seen"] = now
                         STATE.lan_hosts[mac]["known"] = is_known
+
+            for ip, vendor in new_events:
+                add_security_event(
+                    "WARN",
+                    "LAN",
+                    f"Wykryto nowe urzadzenie w podsieci LAN: {ip} ({vendor})",
+                    (1, 3),
+                )
 
             # Subnet sweep every 45s or on demand
             if (now - last_sweep >= 45.0) or STATE.force_subnet_sweep:
